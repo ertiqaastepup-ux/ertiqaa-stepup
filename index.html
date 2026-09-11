@@ -282,6 +282,20 @@ footer{background:var(--navy);color:#dce8e8;text-align:center;padding:19px;font-
 .cert-text{font-size:24px;line-height:1.9;margin:0 auto;max-width:900px}
 .cert-name{font-size:31px;font-weight:900;color:#0f2747;margin:10px 0}
 .cert-level{font-weight:900;color:#237f7c}
+
+.cert-skills{
+  margin:12px auto 0;
+  max-width:880px;
+  font-size:17px;
+  line-height:1.8;
+  color:#5f6b78;
+  font-weight:600;
+}
+.cert-skills b{
+  color:#0f2747;
+  font-weight:800;
+}
+
 .cert-footer{position:absolute;bottom:34px;right:0;left:0;font-size:18px;color:#46566d;line-height:1.7}
 </style>
 
@@ -436,17 +450,24 @@ try{
 }catch(e){}
 
 async function sb(path,opts={}){
-  const r=await fetch(SUPABASE_URL+"/rest/v1/"+path,{
-    ...opts,
-    headers:{
-      apikey:SUPABASE_ANON_KEY,
-      Authorization:"Bearer "+SUPABASE_ANON_KEY,
-      "Content-Type":"application/json",
-      Prefer:opts.method==="POST"?"return=representation":"return=minimal"
-    }
-  });
-  if(!r.ok) throw new Error(await r.text());
-  const t=await r.text(); return t?JSON.parse(t):null;
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),6000);
+  try{
+    const r=await fetch(SUPABASE_URL+"/rest/v1/"+path,{
+      ...opts,
+      signal:controller.signal,
+      headers:{
+        apikey:SUPABASE_ANON_KEY,
+        Authorization:"Bearer "+SUPABASE_ANON_KEY,
+        "Content-Type":"application/json",
+        Prefer:opts.method==="POST"?"return=representation":"return=minimal"
+      }
+    });
+    if(!r.ok) throw new Error(await r.text());
+    const t=await r.text(); return t?JSON.parse(t):null;
+  }finally{
+    clearTimeout(timer);
+  }
 }
 const esc=x=>String(x??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 function getPending(){try{return JSON.parse(localStorage.getItem(PENDING_KEY)||"[]")}catch(e){return[]}}
@@ -780,6 +801,7 @@ async function issueCertificate(studentName,testTitle,percentage){
       '<div class="cert-name">'+esc(name)+'</div>'+
       '<div class="cert-text">قد أتمت اختبار <b>'+esc(testTitle||"Grammar")+'</b> ضمن برنامج <b>ارتقاء | STEP UP</b><br>'+
       'وحققت نسبة <b>'+Number(percentage)+'%</b> بمستوى إنجاز <span class="cert-level">'+level+'</span></div>'+
+      '<div class="cert-skills"><b>المهارات التفصيلية:</b> '+esc(testSkills)+'</div>'+
       '<div class="cert-footer">إدارة تعليم جدة<br>العام الدراسي ١٤٤٨هـ<br>تاريخ الإصدار: '+dateText+'</div>'+
     '</div>';
 
@@ -832,6 +854,9 @@ async function syncPending(){
 async function openBank(testId){
   const modal=document.getElementById("bankModal");
   const body=modal.querySelector(".bank-body");
+  const bankTitle=document.getElementById("bankTitle");
+  const displayNames={1:"Grammar 1",2:"Grammar 2",3:"Grammar 3",4:"Grammar 4",5:"Grammar 4"};
+  if(bankTitle) bankTitle.textContent=displayNames[Number(testId)]||"Grammar";
   modal.classList.add("open");
   body.innerHTML='<div class="bank-loading">جاري تحميل الاختبار...</div>';
   bank.answers={};
@@ -852,9 +877,16 @@ async function openBank(testId){
   }catch(e){
     bank.test=FALLBACK_TEST; bank.questions=FALLBACK_QUESTIONS; bank.offline=true;
   }
-  const bankTitle=document.getElementById("bankTitle");
   if(bankTitle) bankTitle.textContent=displayTestName(bank.test);
-  renderBank(body);
+  try{
+    renderBank(body);
+  }catch(renderError){
+    bank.test=FALLBACK_TEST;
+    bank.questions=FALLBACK_QUESTIONS;
+    bank.offline=true;
+    if(bankTitle) bankTitle.textContent="Grammar 1";
+    renderBank(body);
+  }
 }
 
 function renderBank(body){
