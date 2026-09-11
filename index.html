@@ -230,6 +230,61 @@ footer{background:var(--navy);color:#dce8e8;text-align:center;padding:19px;font-
 }
 </style>
 
+
+<style>
+.certificate-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  margin-top:14px;
+  min-height:42px;
+  padding:10px 16px;
+  border:0;
+  border-radius:12px;
+  background:#0f2747;
+  color:#fff;
+  font-weight:800;
+  cursor:pointer;
+}
+#certificateCanvas{
+  position:fixed;
+  left:-10000px;
+  top:0;
+  width:1120px;
+  height:790px;
+  background:#f8f3e7;
+  direction:rtl;
+  font-family:Arial,"Tahoma",sans-serif;
+  color:#0f2747;
+  box-sizing:border-box;
+  padding:48px 64px;
+}
+.cert-frame{
+  width:100%;
+  height:100%;
+  border:8px solid #0f2747;
+  outline:3px solid #c49a3a;
+  outline-offset:-18px;
+  box-sizing:border-box;
+  padding:42px 58px;
+  text-align:center;
+  position:relative;
+  background:
+    radial-gradient(circle at 10% 10%,rgba(36,139,139,.08),transparent 28%),
+    radial-gradient(circle at 90% 90%,rgba(196,154,58,.10),transparent 26%),
+    #fffdf8;
+}
+.cert-logo{width:110px;height:110px;object-fit:contain;margin:0 auto 10px}
+.cert-school{font-size:24px;font-weight:900;margin-top:4px}
+.cert-dept{font-size:20px;font-weight:800;color:#237f7c;margin-top:4px}
+.cert-title{font-size:38px;font-weight:900;color:#c49a3a;margin:28px 0 14px}
+.cert-text{font-size:24px;line-height:1.9;margin:0 auto;max-width:900px}
+.cert-name{font-size:31px;font-weight:900;color:#0f2747;margin:10px 0}
+.cert-level{font-weight:900;color:#237f7c}
+.cert-footer{position:absolute;bottom:34px;right:0;left:0;font-size:18px;color:#46566d;line-height:1.7}
+</style>
+
 </head>
 <body>
 <section class="hero" id="approved-brand-header" aria-label="الترويسة والهوية المعتمدة">
@@ -648,6 +703,70 @@ async function refreshStats(){
   }
 }
 
+
+function getAchievementLevel(p){
+  p=Number(p)||0;
+  if(p>=90) return "متميز";
+  if(p>=80) return "متقدم";
+  if(p>=70) return "متقن";
+  if(p>=60) return "نامٍ";
+  return "يحتاج إلى تحسين";
+}
+
+async function issueCertificate(studentName,testTitle,percentage){
+  const name=(studentName||"").trim();
+  if(!name) return;
+
+  const level=getAchievementLevel(percentage);
+  const old=document.getElementById("certificateCanvas");
+  if(old) old.remove();
+
+  const wrap=document.createElement("div");
+  wrap.id="certificateCanvas";
+
+  const logo=document.querySelector("#approved-brand-header .logo-wrap img");
+  const logoSrc=logo ? logo.src : "";
+
+  const today=new Date();
+  const dateText=today.toLocaleDateString("ar-SA-u-ca-gregory",{year:"numeric",month:"2-digit",day:"2-digit"});
+
+  wrap.innerHTML=
+    '<div class="cert-frame">'+
+      (logoSrc?'<img class="cert-logo" src="'+logoSrc+'" alt="">':'')+
+      '<div class="cert-school">الثانوية الرابعة والتسعون - مسارات</div>'+
+      '<div class="cert-dept">قسم اللغة الإنجليزية</div>'+
+      '<div class="cert-title">شهادة إنجاز</div>'+
+      '<div class="cert-text">تشهد الثانوية الرابعة والتسعون - مسارات، قسم اللغة الإنجليزية، بأن الطالبة</div>'+
+      '<div class="cert-name">'+esc(name)+'</div>'+
+      '<div class="cert-text">قد أتمت اختبار <b>'+esc(testTitle||"Grammar")+'</b> ضمن برنامج <b>ارتقاء | STEP UP</b><br>'+
+      'وحققت نسبة <b>'+Number(percentage)+'%</b> بمستوى إنجاز <span class="cert-level">'+level+'</span></div>'+
+      '<div class="cert-footer">إدارة تعليم جدة<br>العام الدراسي ١٤٤٨هـ<br>تاريخ الإصدار: '+dateText+'</div>'+
+    '</div>';
+
+  document.body.appendChild(wrap);
+
+  try{
+    const canvas=await html2canvas(wrap,{scale:2,useCORS:true,backgroundColor:"#f8f3e7"});
+    const imgData=canvas.toDataURL("image/jpeg",0.95);
+    const {jsPDF}=window.jspdf;
+    const pdf=new jsPDF({orientation:"landscape",unit:"mm",format:"a4"});
+    pdf.addImage(imgData,"JPEG",0,0,297,210);
+    const safe=name.replace(/[\\/:*?"<>|]+/g,"_").trim() || "student";
+    pdf.save("شهادة_إنجاز_"+safe+".pdf");
+  }catch(err){
+    alert("تعذر إنشاء الشهادة الآن. تأكدي من الاتصال بالإنترنت ثم حاولي مرة أخرى");
+  }finally{
+    wrap.remove();
+  }
+}
+
+function requestCertificateName(testTitle,percentage){
+  const name=prompt("اكتبي اسم الطالبة كما تريدينه أن يظهر في الشهادة");
+  if(name===null) return;
+  if(!name.trim()) return alert("يرجى كتابة اسم الطالبة");
+  issueCertificate(name,testTitle,percentage);
+}
+
 document.addEventListener("click",e=>{
   const btn=e.target.closest("[data-analysis-toggle]");
   if(!btn || btn.disabled) return;
@@ -825,9 +944,14 @@ async function submitBank(){
     '<div style="margin-top:8px;font-size:12px;color:#667085">'+
       (savedOnline ? 'تم حفظ النتيجة في قاعدة البيانات' : 'تم حفظ النتيجة مؤقتًا على هذا الجهاز وستتم مزامنتها عند عودة الاتصال')+
     '</div>'+
-    '<div style="margin-top:12px;font-size:12px;color:#475467">الأخضر = الإجابة الصحيحة، الأحمر = إجابتك الخاطئة</div>';
+    '<div style="margin-top:12px;font-size:12px;color:#475467">الأخضر = الإجابة الصحيحة، الأحمر = إجابتك الخاطئة</div>'+
+    '<button type="button" class="certificate-btn" id="issueCertificateBtn">📜 إصدار شهادة الإنجاز</button>';
 
   body.insertBefore(summary, body.firstChild);
+  const certBtn=summary.querySelector("#issueCertificateBtn");
+  if(certBtn){
+    certBtn.onclick=()=>requestCertificateName((bank.test&&bank.test.title)||"Grammar",percentage);
+  }
   body.scrollTop=0;
 }
 document.addEventListener("click",e=>{
@@ -840,6 +964,10 @@ document.getElementById("bankModal").addEventListener("click",e=>{if(e.target.id
 window.addEventListener("load",async()=>{await syncPending().catch(()=>{});await refreshStats();});
 window.addEventListener("online",async()=>{await syncPending().catch(()=>{});await refreshStats();});
 </script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
 </body>
 </html>
