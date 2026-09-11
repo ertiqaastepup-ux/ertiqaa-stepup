@@ -506,11 +506,19 @@ function mergedAttempts(){
 
 function groupByTest(attempts){
   const map={};
+  const fixedTitle=id=>{
+    id=Number(id);
+    if(id===1) return "Grammar 1";
+    if(id===2) return "Grammar 2";
+    if(id===3) return "Grammar 3";
+    if(id===5 || id===4) return "Grammar 4";
+    return "اختبار "+id;
+  };
   attempts.forEach(a=>{
     const id=String(a.test_id||"unknown");
-    if(!map[id]) map[id]={id,title:a.test_title||("اختبار "+id),attempts:[]};
+    if(!map[id]) map[id]={id,title:fixedTitle(id),attempts:[]};
     map[id].attempts.push(a);
-    if(a.test_title) map[id].title=a.test_title;
+    map[id].title=fixedTitle(id);
   });
   return Object.values(map).sort((a,b)=>Number(a.id)-Number(b.id));
 }
@@ -710,8 +718,8 @@ function displayTestName(test){
   if(id===1) return "Grammar 1";
   if(id===2) return "Grammar 2";
   if(id===3) return "Grammar 3";
-  if(id===5) return "Grammar 4";
-  return (test && (displayTestName(test) || test.title_at)) || "Grammar";
+  if(id===5 || id===4) return "Grammar 4";
+  return (test && (test.title || test.title_at)) || "Grammar";
 }
 
 function getAchievementLevel(p){
