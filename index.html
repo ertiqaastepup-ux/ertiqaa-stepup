@@ -480,7 +480,7 @@ function saveLocalHistory(attempt,responses,questions){
   const h=getHistory();
   h.push({
     ...attempt,
-    test_title:(bank.test&&bank.test.title)||("اختبار "+attempt.test_id),
+    test_title:(bank.test&&bank.displayTestName(test))||("اختبار "+attempt.test_id),
     responses:localResponses,
     saved_at:new Date().toISOString()
   });
@@ -585,7 +585,7 @@ async function getCentralAttempts(){
     const t=testMap[String(a.test_id)]||{};
     return {
       ...a,
-      test_title:t.title || ("اختبار "+a.test_id),
+      test_title:displayTestName(t) || ("اختبار "+a.test_id),
       test_date:t.available_date || "",
       responses:[]
     };
@@ -704,6 +704,16 @@ async function refreshStats(){
 }
 
 
+
+function displayTestName(test){
+  const id = Number(test && test.id);
+  if(id===1) return "Grammar 1";
+  if(id===2) return "Grammar 2";
+  if(id===3) return "Grammar 3";
+  if(id===5) return "Grammar 4";
+  return (test && (displayTestName(test) || test.title_at)) || "Grammar";
+}
+
 function getAchievementLevel(p){
   p=Number(p)||0;
   if(p>=90) return "متميز";
@@ -713,11 +723,33 @@ function getAchievementLevel(p){
   return "يحتاج إلى تحسين";
 }
 
+
+function normalizeCertificateTestTitle(title){
+  const t=(title||"").trim();
+  if(/^Grammar\s*1$/i.test(t) || /Tenses/i.test(t)) return "Grammar 1";
+  if(/^Grammar\s*2$/i.test(t) || /Past Progressive|Auxiliary Verbs/i.test(t)) return "Grammar 2";
+  if(/^Grammar\s*3$/i.test(t) || /Comparatives|Superlatives|Passive Structures/i.test(t)) return "Grammar 3";
+  if(/^Grammar\s*4$/i.test(t) || /Relative Pronouns|Past Perfect|Used to|Would|Passive Voice/i.test(t)) return "Grammar 4";
+  return t || "Grammar";
+}
+
+
+function getCertificateSkills(testTitle){
+  const t=normalizeCertificateTestTitle(testTitle);
+  if(t==="Grammar 1") return "Present Simple، Present Progressive، Present Perfect، Past Simple";
+  if(t==="Grammar 2") return "Past Progressive، when / while، Auxiliary Verbs، Question Formation، Negative Forms، Short Answers";
+  if(t==="Grammar 3") return "Comparatives، Superlatives، Irregular Comparison، Passive Structures";
+  if(t==="Grammar 4") return "Relative Pronouns، Past Perfect، Past Perfect Progressive، Used to / Would، Passive Voice";
+  return "وفق المهارات المعتمدة في الاختبار";
+}
+
 async function issueCertificate(studentName,testTitle,percentage){
   const name=(studentName||"").trim();
   if(!name) return;
 
   const level=getAchievementLevel(percentage);
+  testTitle=normalizeCertificateTestTitle(testTitle);
+  const testSkills=getCertificateSkills(testTitle);
   const old=document.getElementById("certificateCanvas");
   if(old) old.remove();
 
@@ -817,7 +849,7 @@ async function openBank(testId){
 
 function renderBank(body){
   const pending=getPending().length;
-  body.innerHTML='<div class="bank-meta"><b>'+esc(bank.test.title)+'</b><br>'+esc(bank.test.content||"")+'<br>'+bank.questions.length+' سؤالًا</div>'+
+  body.innerHTML='<div class="bank-meta"><b>'+esc(bank.displayTestName(test))+'</b><br>'+esc(bank.test.content||"")+'<br>'+bank.questions.length+' سؤالًا</div>'+
   (bank.offline?'<div style="margin:10px 0;padding:10px;border-radius:10px;background:#fff8e9;border:1px solid #e5cf99;font-size:12px">وضع مؤقت: يعمل الاختبار الآن من الموقع، وتحفظ النتيجة على هذا الجهاز حتى تعود قاعدة البيانات</div>':'')+
   (pending?'<div style="text-align:center;font-size:11px;color:#765a22;margin-bottom:8px">محاولات بانتظار المزامنة: '+pending+'</div>':'');
   bank.questions.forEach((q,i)=>{
@@ -864,7 +896,7 @@ async function submitBank(){
     savedOnline=false;
     saveLocalHistory(attempt,responses,qs);
     const p=getPending();
-    p.push({attempt:{...attempt,test_title:(bank.test&&bank.test.title)||("اختبار "+attempt.test_id)},responses,saved_at:new Date().toISOString()});
+    p.push({attempt:{...attempt,test_title:(bank.test&&bank.displayTestName(test))||("اختبار "+attempt.test_id)},responses,saved_at:new Date().toISOString()});
     setPending(p);
   }
 
@@ -950,7 +982,7 @@ async function submitBank(){
   body.insertBefore(summary, body.firstChild);
   const certBtn=summary.querySelector("#issueCertificateBtn");
   if(certBtn){
-    certBtn.onclick=()=>requestCertificateName((bank.test&&bank.test.title)||"Grammar",percentage);
+    certBtn.onclick=()=>requestCertificateName((bank.test&&bank.displayTestName(test))||"Grammar",percentage);
   }
   body.scrollTop=0;
 }
