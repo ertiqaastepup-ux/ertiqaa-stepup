@@ -428,32 +428,59 @@ function renderTrend(groups){
 }
 
 async function getCentralAttempts(){
-  const [tests,questions,attempts,responses]=await Promise.all([
-    sb("tests?select=id,title,available_date&order=available_date.asc"),
-    sb("questions?select=id,test_id,topic"),
-    sb("attempts?select=id,test_id,score,total_questions,percentage,session_id,completed_at,created_at&order=created_at.asc"),
-    sb("responses?select=id,attempt_id,question_id,selected_answer,is_correct")
-  ]);
+  // الإحصائيات الأساسية تعتمد أولًا على attempts فقط حتى لا تتعطل إذا فشل جلب التفاصيل
+  const attempts=await sb("attempts?select=id,test_id,score,total_questions,percentage,session_id,completed_at,created_at&order=created_at.asc");
+
+  let tests=[];
+  try{
+    tests=await sb("tests?select=id,title,available_date&order=available_date.asc");
+  }catch(e){ tests=[]; }
+
   const testMap={};
   (tests||[]).forEach(t=>testMap[String(t.id)]=t);
-  const questionMap={};
-  (questions||[]).forEach(q=>questionMap[String(q.id)]=q);
-  const responsesByAttempt={};
-  (responses||[]).forEach(r=>{
-    const key=String(r.attempt_id);
-    if(!responsesByAttempt[key]) responsesByAttempt[key]=[];
-    const q=questionMap[String(r.question_id)]||{};
-    responsesByAttempt[key].push({
-      question_id:r.question_id,
-      selected_answer:r.selected_answer,
-      is_correct:r.is_correct,
-      topic:q.topic || topicForQuestion(r.question_id)
-    });
-  });
-  return (attempts||[]).map(a=>{
+
+  // نجهز المحاولات فورًا، حتى لو لم نتمكن من قراءة responses/questions
+  const central=(attempts||[]).map(a=>{
     const t=testMap[String(a.test_id)]||{};
-    return {...a,test_title:t.title || ("اختبار "+a.test_id),test_date:t.available_date || "",responses:responsesByAttempt[String(a.id)]||[]};
+    return {
+      ...a,
+      test_title:t.title || ("اختبار "+a.test_id),
+      test_date:t.available_date || "",
+      responses:[]
+    };
   });
+
+  // التفاصيل اختيارية لتحليل موضوعات كل اختبار
+  try{
+    const [questions,responses]=await Promise.all([
+      sb("questions?select=id,test_id,topic"),
+      sb("responses?select=id,attempt_id,question_id,selected_answer,is_correct")
+    ]);
+
+    const questionMap={};
+    (questions||[]).forEach(q=>questionMap[String(q.id)]=q);
+
+    const responsesByAttempt={};
+    (responses||[]).forEach(r=>{
+      const key=String(r.attempt_id);
+      if(!responsesByAttempt[key]) responsesByAttempt[key]=[];
+      const q=questionMap[String(r.question_id)]||{};
+      responsesByAttempt[key].push({
+        question_id:r.question_id,
+        selected_answer:r.selected_answer,
+        is_correct:r.is_correct,
+        topic:q.topic || topicForQuestion(r.question_id)
+      });
+    });
+
+    central.forEach(a=>{
+      a.responses=responsesByAttempt[String(a.id)]||[];
+    });
+  }catch(e){
+    // تبقى الإحصائيات العامة فعالة حتى لو فشل التحليل التفصيلي
+  }
+
+  return central;
 }
 
 function renderStatsFromAttempts(attemptsList){
@@ -462,16 +489,22 @@ function renderStatsFromAttempts(attemptsList){
   const highest=document.getElementById("kpiHighest");
   const improvement=document.getElementById("kpiImprovement");
   if(!attempts) return;
+
   attempts.textContent=String(attemptsList.length);
+
   if(!attemptsList.length){
-    average.textContent="0%"; highest.textContent="0%"; improvement.textContent="—";
+    average.textContent="0%";
+    highest.textContent="0%";
+    improvement.textContent="—";
   }else{
     const vals=attemptsList.map(x=>Number(x.percentage)||0);
     average.textContent=Math.round(vals.reduce((a,b)=>a+b,0)/vals.length)+"%";
     highest.textContent=Math.max(...vals)+"%";
+
     const groups=groupByTest(attemptsList);
-    if(groups.length<2){ improvement.textContent="—"; }
-    else{
+    if(groups.length<2){
+      improvement.textContent="—";
+    }else{
       const firstVals=groups[0].attempts.map(a=>Number(a.percentage)||0);
       const lastVals=groups[groups.length-1].attempts.map(a=>Number(a.percentage)||0);
       const firstAvg=Math.round(firstVals.reduce((a,b)=>a+b,0)/firstVals.length);
@@ -480,17 +513,22 @@ function renderStatsFromAttempts(attemptsList){
       improvement.textContent=(diff>0?"+":"")+diff+"%";
     }
   }
+
   const groups=groupByTest(attemptsList);
   groups.forEach(renderTestAnalysis);
   renderTrend(groups);
 }
 
 async function refreshStats(){
+  const status=document.getElementById("statsStatus");
   try{
     const central=await getCentralAttempts();
     renderStatsFromAttempts(central);
+    if(status) status.textContent="متصل بقاعدة البيانات";
   }catch(e){
     renderStatsFromAttempts(mergedAttempts());
+    if(status) status.textContent="عرض مؤقت من هذا الجهاز";
+    console.error("Stats load failed",e);
   }
 }
 
