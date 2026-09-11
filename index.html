@@ -111,6 +111,9 @@ footer{background:var(--navy);color:#dce8e8;text-align:center;padding:19px;font-
   border:1px solid #bdd9d5;background:#f5fbfa;color:var(--navy);
   border-radius:999px;padding:8px 12px;font-weight:800;font-size:11px;cursor:pointer
 }
+.test-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.test-actions .btn,.test-actions .analysis-btn{flex:1 1 120px;min-height:38px}
+.analysis-btn:disabled,.bank-btn:disabled{opacity:.52;cursor:not-allowed;filter:grayscale(.25)}
 .test-analysis-panel{
   display:none;margin-top:12px;padding:12px;border-radius:14px;background:#f8fbfc;border:1px solid #dfe9ee
 }
@@ -206,23 +209,58 @@ footer{background:var(--navy);color:#dce8e8;text-align:center;padding:19px;font-
    <h2 class="title">البنك الرقمي</h2>
    <p class="subtitle">اختبارات تراكمية أسبوعية تحاكي اختبار STEP</p>
    <div class="tests" role="list" aria-label="الاختبارات الأسبوعية التراكمية">
-    <article class="test current" role="listitem" aria-label="الاختبار الحالي المتاح">
+    <article class="test current" role="listitem" aria-label="الاختبار الأول">
      <h3>Grammar | Tenses الأزمنة</h3>
      <div class="tenses">Present Simple • Present Progressive • Present Perfect • Past Simple</div>
      <div class="date">الأربعاء 09-09-2026</div>
      <div class="status"><span class="dot"></span>متاح</div>
-     <button class="btn" id="openBank" type="button" aria-haspopup="dialog" aria-controls="bankModal" aria-label="فتح البنك الرقمي لاختبار الأزمنة">البنك الرقمي</button>
+     <div class="test-actions">
+      <button class="btn bank-btn" type="button" data-open-test="1" data-available-date="2026-09-09" aria-haspopup="dialog" aria-controls="bankModal">ابدأ الاختبار</button>
+      <button class="analysis-btn" type="button" data-analysis-toggle="1" disabled>تحليل الأداء</button>
+     </div>
      <div class="test-performance" data-test-id="1">
-      <div class="test-performance-summary">
-       <div class="test-performance-metrics" id="testMetrics1">لا توجد محاولات بعد</div>
-       <button class="analysis-btn" type="button" data-analysis-toggle="1">تحليل الأداء</button>
-      </div>
+      <div class="test-performance-summary"><div class="test-performance-metrics" id="testMetrics1">لا توجد محاولات بعد</div></div>
       <div class="test-analysis-panel" id="testAnalysis1"></div>
      </div>
     </article>
-    <article class="test future" role="listitem" aria-label="اختبار قادم"><h3>يتاح قريبًا</h3><div class="date">الأربعاء 16-09-2026</div></article>
-    <article class="test future" role="listitem" aria-label="اختبار قادم"><h3>يتاح قريبًا</h3><div class="date">الأربعاء 23-09-2026</div></article>
-    <article class="test future" role="listitem" aria-label="اختبار قادم"><h3>يتاح قريبًا</h3><div class="date">الأربعاء 30-09-2026</div></article>
+    <article class="test future" role="listitem" aria-label="الاختبار الثاني">
+     <h3>Past Progressive & Auxiliary Verbs</h3>
+     <div class="tenses">Past Progressive • when / while • Auxiliary Verbs • Questions, Negatives & Short Answers</div>
+     <div class="date">الأربعاء 16-09-2026</div>
+     <div class="test-actions">
+      <button class="btn bank-btn" type="button" data-open-test="2" data-available-date="2026-09-16" aria-haspopup="dialog" aria-controls="bankModal">ابدأ الاختبار</button>
+      <button class="analysis-btn" type="button" data-analysis-toggle="2" disabled>تحليل الأداء</button>
+     </div>
+     <div class="test-performance" data-test-id="2">
+      <div class="test-performance-summary"><div class="test-performance-metrics" id="testMetrics2">لا توجد محاولات بعد</div></div>
+      <div class="test-analysis-panel" id="testAnalysis2"></div>
+     </div>
+    </article>
+    <article class="test future" role="listitem" aria-label="الاختبار الثالث">
+     <h3>Comparatives, Superlatives & Passive Structures</h3>
+     <div class="tenses">Comparatives • Superlatives • Irregular Comparison • Passive Structures</div>
+     <div class="date">الأربعاء 23-09-2026</div>
+     <div class="test-actions">
+      <button class="btn bank-btn" type="button" data-open-test="3" data-available-date="2026-09-23" aria-haspopup="dialog" aria-controls="bankModal">ابدأ الاختبار</button>
+      <button class="analysis-btn" type="button" data-analysis-toggle="3" disabled>تحليل الأداء</button>
+     </div>
+     <div class="test-performance" data-test-id="3">
+      <div class="test-performance-summary"><div class="test-performance-metrics" id="testMetrics3">لا توجد محاولات بعد</div></div>
+      <div class="test-analysis-panel" id="testAnalysis3"></div>
+     </div>
+    </article>
+    <article class="test future" role="listitem" aria-label="الاختبار الرابع">
+     <h3>يتاح قريبًا</h3>
+     <div class="date">الأربعاء 30-09-2026</div>
+     <div class="test-actions">
+      <button class="btn bank-btn" type="button" data-open-test="4" data-available-date="2026-09-30" aria-haspopup="dialog" aria-controls="bankModal">ابدأ الاختبار</button>
+      <button class="analysis-btn" type="button" data-analysis-toggle="4" disabled>تحليل الأداء</button>
+     </div>
+     <div class="test-performance" data-test-id="4">
+      <div class="test-performance-summary"><div class="test-performance-metrics" id="testMetrics4">لا توجد محاولات بعد</div></div>
+      <div class="test-analysis-panel" id="testAnalysis4"></div>
+     </div>
+    </article>
    </div>
   </section>
 
@@ -483,6 +521,27 @@ async function getCentralAttempts(){
   return central;
 }
 
+function setCardActionStates(attemptsList){
+  const today=new Date();
+  today.setHours(0,0,0,0);
+
+  document.querySelectorAll('[data-open-test]').forEach(btn=>{
+    const raw=btn.getAttribute('data-available-date')||'';
+    const available=raw ? new Date(raw+'T00:00:00') : null;
+    const isAvailable=!available || available<=today;
+    btn.disabled=!isAvailable;
+    btn.title=isAvailable ? 'ابدأ الاختبار' : 'يتاح في '+raw;
+  });
+
+  const performed=new Set((attemptsList||[]).map(a=>String(a.test_id)));
+  document.querySelectorAll('[data-analysis-toggle]').forEach(btn=>{
+    const id=btn.getAttribute('data-analysis-toggle');
+    const hasPerformance=performed.has(String(id));
+    btn.disabled=!hasPerformance;
+    btn.title=hasPerformance ? 'عرض تحليل الأداء' : 'يتاح تحليل الأداء بعد تنفيذ الاختبار';
+  });
+}
+
 function renderStatsFromAttempts(attemptsList){
   const attempts=document.getElementById("kpiAttempts");
   const average=document.getElementById("kpiAverage");
@@ -514,6 +573,7 @@ function renderStatsFromAttempts(attemptsList){
     }
   }
 
+  setCardActionStates(attemptsList);
   const groups=groupByTest(attemptsList);
   groups.forEach(renderTestAnalysis);
   renderTrend(groups);
@@ -534,7 +594,7 @@ async function refreshStats(){
 
 document.addEventListener("click",e=>{
   const btn=e.target.closest("[data-analysis-toggle]");
-  if(!btn) return;
+  if(!btn || btn.disabled) return;
   const id=btn.getAttribute("data-analysis-toggle");
   const panel=document.getElementById("testAnalysis"+id);
   if(!panel) return;
@@ -554,15 +614,23 @@ async function syncPending(){
   setPending(left);
 }
 
-async function openBank(){
+async function openBank(testId){
   const modal=document.getElementById("bankModal");
   const body=modal.querySelector(".bank-body");
   modal.classList.add("open");
   body.innerHTML='<div class="bank-loading">جاري تحميل الاختبار...</div>';
   bank.answers={};
   try{
-    const tests=await sb("tests?is_active=eq.true&order=available_date.desc&limit=1");
+    const testQuery=testId
+      ? "tests?id=eq."+encodeURIComponent(testId)+"&is_active=eq.true&limit=1"
+      : "tests?is_active=eq.true&order=available_date.desc&limit=1";
+    const tests=await sb(testQuery);
     if(!tests || !tests.length) throw new Error("NO_TEST");
+    if(tests[0].available_date){
+      const available=new Date(tests[0].available_date+"T00:00:00");
+      const today=new Date(); today.setHours(0,0,0,0);
+      if(available>today) throw new Error("NOT_AVAILABLE_YET");
+    }
     const questions=await sb("questions?test_id=eq."+tests[0].id+"&order=question_order.asc");
     if(!questions || !questions.length) throw new Error("NO_QUESTIONS");
     bank.test=tests[0]; bank.questions=questions; bank.offline=false;
@@ -706,7 +774,11 @@ async function submitBank(){
   body.insertBefore(summary, body.firstChild);
   body.scrollTop=0;
 }
-document.getElementById("openBank").onclick=openBank;
+document.addEventListener("click",e=>{
+  const btn=e.target.closest("[data-open-test]");
+  if(!btn || btn.disabled) return;
+  openBank(btn.getAttribute("data-open-test"));
+});
 document.getElementById("closeBank").onclick=()=>document.getElementById("bankModal").classList.remove("open");
 document.getElementById("bankModal").addEventListener("click",e=>{if(e.target.id==="bankModal") e.currentTarget.classList.remove("open")});
 window.addEventListener("load",async()=>{await syncPending().catch(()=>{});await refreshStats();});
