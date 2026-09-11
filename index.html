@@ -48,14 +48,14 @@ h1{font-size:36px;line-height:1.3;margin:12px 0 8px}
 .title{text-align:center;margin:0;color:var(--navy);font-size:24px}
 .subtitle{text-align:center;color:var(--muted);font-size:13px;margin:7px 0 22px}
 .tests{display:grid;grid-template-columns:repeat(4,1fr);gap:15px}
-.test{
+.test{border-top:5px solid #2f8f6b;
  background:#fff;border:1px solid #dce7e6;border-radius:18px;padding:20px;
  min-height:230px;display:flex;flex-direction:column;text-align:center;
  box-shadow:0 10px 28px rgba(11,39,64,.07);position:relative;overflow:hidden
 }
 .test.current{border-top:5px solid var(--teal)}
 .test.future{border-top:5px solid #c7d3d3}
-.test h3{margin:4px 0 9px;color:var(--navy);font-size:19px;line-height:1.5}
+.test h3{margin:4px 0 12px;color:var(--navy);font-size:clamp(12px,2.8vw,17px);line-height:1.5;background:#f3e7c6;border:1px solid #d7bd79;border-radius:12px;padding:9px 8px;font-weight:800;direction:ltr;text-align:center;white-space:nowrap}
 .tenses{font-size:12px;line-height:1.9;color:var(--muted);direction:ltr;margin-bottom:12px}
 .date{font-size:12px;color:var(--red);font-weight:700;margin-top:auto}
 .status{font-size:13px;color:var(--green);font-weight:700;margin:9px 0}
@@ -93,7 +93,7 @@ footer{background:var(--navy);color:#dce8e8;text-align:center;padding:19px;font-
 }
 @media(max-width:560px){
  .hero-inner{padding:22px 16px;gap:12px} h1{font-size:27px}
- .tests,.kpis{grid-template-columns:1fr} .test{min-height:200px}
+ .tests,.kpis{grid-template-columns:1fr} .test{border-top:5px solid #2f8f6b;min-height:200px}
  .bars{gap:10px;padding:0 6px} .bar span{font-size:8px}
 }
 
@@ -186,6 +186,50 @@ footer{background:var(--navy);color:#dce8e8;text-align:center;padding:19px;font-
 .bank-note{margin-top:14px;font-size:12px;color:var(--muted);text-align:center}
 </style>
 
+
+<style>
+.availability-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  margin:2px auto 10px;
+  padding:6px 10px;
+  border-radius:10px;
+  font-size:13px;
+  font-weight:700;
+  line-height:1;
+}
+.availability-badge.unavailable{
+  background:#eef5f2;
+  border:1px solid #9fc9b7;
+  color:#245f4c;
+}
+.availability-icon{font-size:14px}
+</style>
+
+
+<style>
+.status.unavailable-status{
+  color:#b3261e !important;
+}
+.status.unavailable-status .dot{
+  background:#b3261e !important;
+  box-shadow:0 0 0 3px rgba(179,38,30,.12);
+}
+</style>
+
+
+<style>
+.test .date{
+  color:#17365d !important;
+  font-weight:700;
+}
+.test{
+  border-top:5px solid #2f8f6b !important;
+}
+</style>
+
 </head>
 <body>
 <section class="hero" id="approved-brand-header" aria-label="الترويسة والهوية المعتمدة">
@@ -210,7 +254,7 @@ footer{background:var(--navy);color:#dce8e8;text-align:center;padding:19px;font-
    <p class="subtitle">اختبارات تراكمية أسبوعية تحاكي اختبار STEP</p>
    <div class="tests" role="list" aria-label="الاختبارات الأسبوعية التراكمية">
     <article class="test current" role="listitem" aria-label="الاختبار الأول">
-     <h3>Grammar | Tenses الأزمنة</h3>
+     <h3>Grammar 1</h3>
      <div class="tenses">Present Simple • Present Progressive • Present Perfect • Past Simple</div>
      <div class="date">الأربعاء 09-09-2026</div>
      <div class="status"><span class="dot"></span>متاح</div>
@@ -224,9 +268,10 @@ footer{background:var(--navy);color:#dce8e8;text-align:center;padding:19px;font-
      </div>
     </article>
     <article class="test future" role="listitem" aria-label="الاختبار الثاني">
-     <h3>Past Progressive & Auxiliary Verbs</h3>
+     <h3>Grammar 2</h3>
      <div class="tenses">Past Progressive • when / while • Auxiliary Verbs • Questions, Negatives & Short Answers</div>
      <div class="date">الأربعاء 16-09-2026</div>
+     <div class="status unavailable-status" data-availability-status="2" data-available-date="2026-09-16"><span class="dot"></span>غير متاح</div>
      <div class="test-actions">
       <button class="btn bank-btn" type="button" data-open-test="2" data-available-date="2026-09-16" aria-haspopup="dialog" aria-controls="bankModal">ابدأ الاختبار</button>
       <button class="analysis-btn" type="button" data-analysis-toggle="2" disabled>تحليل الأداء</button>
@@ -237,9 +282,10 @@ footer{background:var(--navy);color:#dce8e8;text-align:center;padding:19px;font-
      </div>
     </article>
     <article class="test future" role="listitem" aria-label="الاختبار الثالث">
-     <h3>Comparatives, Superlatives & Passive Structures</h3>
+     <h3>Grammar 3</h3>
      <div class="tenses">Comparatives • Superlatives • Irregular Comparison • Passive Structures</div>
      <div class="date">الأربعاء 23-09-2026</div>
+     <div class="status unavailable-status" data-availability-status="3" data-available-date="2026-09-23"><span class="dot"></span>غير متاح</div>
      <div class="test-actions">
       <button class="btn bank-btn" type="button" data-open-test="3" data-available-date="2026-09-23" aria-haspopup="dialog" aria-controls="bankModal">ابدأ الاختبار</button>
       <button class="analysis-btn" type="button" data-analysis-toggle="3" disabled>تحليل الأداء</button>
@@ -250,15 +296,17 @@ footer{background:var(--navy);color:#dce8e8;text-align:center;padding:19px;font-
      </div>
     </article>
     <article class="test future" role="listitem" aria-label="الاختبار الرابع">
-     <h3>يتاح قريبًا</h3>
+     <h3>Grammar 4</h3>
+     <div class="tenses">Relative Pronouns • Past Perfect • Past Perfect Progressive • Used to / Would • Passive Voice</div>
      <div class="date">الأربعاء 30-09-2026</div>
+     <div class="status unavailable-status" data-availability-status="5" data-available-date="2026-09-30"><span class="dot"></span>غير متاح</div>
      <div class="test-actions">
-      <button class="btn bank-btn" type="button" data-open-test="4" data-available-date="2026-09-30" aria-haspopup="dialog" aria-controls="bankModal">ابدأ الاختبار</button>
-      <button class="analysis-btn" type="button" data-analysis-toggle="4" disabled>تحليل الأداء</button>
+      <button class="btn bank-btn" type="button" data-open-test="5" data-available-date="2026-09-30" aria-haspopup="dialog" aria-controls="bankModal">ابدأ الاختبار</button>
+      <button class="analysis-btn" type="button" data-analysis-toggle="5" disabled>تحليل الأداء</button>
      </div>
-     <div class="test-performance" data-test-id="4">
-      <div class="test-performance-summary"><div class="test-performance-metrics" id="testMetrics4">لا توجد محاولات بعد</div></div>
-      <div class="test-analysis-panel" id="testAnalysis4"></div>
+     <div class="test-performance" data-test-id="5">
+      <div class="test-performance-summary"><div class="test-performance-metrics" id="testMetrics5">لا توجد محاولات بعد</div></div>
+      <div class="test-analysis-panel" id="testAnalysis5"></div>
      </div>
     </article>
    </div>
@@ -292,7 +340,7 @@ footer{background:var(--navy);color:#dce8e8;text-align:center;padding:19px;font-
 <div class="bank-modal" id="bankModal" role="dialog" aria-modal="true" aria-labelledby="bankTitle">
  <div class="bank-dialog">
   <div class="bank-head">
-   <h2 id="bankTitle">Grammar | Tenses الأزمنة</h2>
+   <h2 id="bankTitle">Grammar | Tenses</h2>
    <button class="bank-close" id="closeBank" type="button" aria-label="إغلاق">×</button>
   </div>
   <div class="bank-body">
@@ -316,7 +364,7 @@ footer{background:var(--navy);color:#dce8e8;text-align:center;padding:19px;font-
 <script>
 const SUPABASE_URL="https://takkfbijjmovtvktutfa.supabase.co";
 const SUPABASE_ANON_KEY="sb_publishable_Kkdx7DW5GSRgYz9rfQ1Xig_MW4xkZ_f";
-const FALLBACK_TEST={id:1,title:"Grammar | Tenses الأزمنة",content:"Present Simple • Present Progressive • Present Perfect • Past Simple"};
+const FALLBACK_TEST={id:1,title:"Grammar | Tenses",content:"Present Simple • Present Progressive • Present Perfect • Past Simple"};
 const FALLBACK_QUESTIONS=[{"id": 1, "question_text": "Sara usually ______ to school early.", "option_a": "come", "option_b": "comes", "option_c": "is coming", "option_d": "has come", "correct_answer": "B", "question_order": 1}, {"id": 2, "question_text": "Look! The students ______ for their English test now.", "option_a": "study", "option_b": "studied", "option_c": "are studying", "option_d": "have studied", "correct_answer": "C", "question_order": 2}, {"id": 3, "question_text": "We ______ in Jeddah since 2022.", "option_a": "live", "option_b": "lived", "option_c": "are living", "option_d": "have lived", "correct_answer": "D", "question_order": 3}, {"id": 4, "question_text": "My sister ______ her grandmother yesterday.", "option_a": "visits", "option_b": "visited", "option_c": "is visiting", "option_d": "has visited", "correct_answer": "B", "question_order": 4}, {"id": 5, "question_text": "Ahmed ______ coffee every morning before work.", "option_a": "drinks", "option_b": "drank", "option_c": "is drinking", "option_d": "has drunk", "correct_answer": "A", "question_order": 5}, {"id": 6, "question_text": "The teacher ______ the lesson at the moment.", "option_a": "explains", "option_b": "explained", "option_c": "is explaining", "option_d": "has explained", "correct_answer": "C", "question_order": 6}, {"id": 7, "question_text": "They ______ this movie three times so far.", "option_a": "watch", "option_b": "watched", "option_c": "are watching", "option_d": "have watched", "correct_answer": "D", "question_order": 7}, {"id": 8, "question_text": "I ______ my keys two hours ago.", "option_a": "lose", "option_b": "lost", "option_c": "am losing", "option_d": "have lost", "correct_answer": "B", "question_order": 8}, {"id": 9, "question_text": "Mona ______ her homework yet.", "option_a": "doesn't finish", "option_b": "didn't finish", "option_c": "isn't finishing", "option_d": "hasn't finished", "correct_answer": "D", "question_order": 9}, {"id": 10, "question_text": "My parents often ______ to the park on weekends.", "option_a": "go", "option_b": "went", "option_c": "are going", "option_d": "have gone", "correct_answer": "A", "question_order": 10}, {"id": 11, "question_text": "Ali ______ his homework every evening.", "option_a": "does", "option_b": "did", "option_c": "is doing", "option_d": "has done", "correct_answer": "A", "question_order": 11}, {"id": 12, "question_text": "Listen! Someone ______ at the door.", "option_a": "knocks", "option_b": "knocked", "option_c": "is knocking", "option_d": "has knocked", "correct_answer": "C", "question_order": 12}, {"id": 13, "question_text": "We ______ our project already.", "option_a": "finish", "option_b": "finished", "option_c": "are finishing", "option_d": "have finished", "correct_answer": "D", "question_order": 13}, {"id": 14, "question_text": "They ______ to Riyadh last weekend.", "option_a": "travel", "option_b": "traveled", "option_c": "are traveling", "option_d": "have traveled", "correct_answer": "B", "question_order": 14}, {"id": 15, "question_text": "My father always ______ the news after dinner.", "option_a": "watches", "option_b": "watched", "option_c": "is watching", "option_d": "has watched", "correct_answer": "A", "question_order": 15}, {"id": 16, "question_text": "Please be quiet. The baby ______ now.", "option_a": "sleeps", "option_b": "slept", "option_c": "is sleeping", "option_d": "has slept", "correct_answer": "C", "question_order": 16}, {"id": 17, "question_text": "She ______ English for five years.", "option_a": "studies", "option_b": "studied", "option_c": "is studying", "option_d": "has studied", "correct_answer": "D", "question_order": 17}, {"id": 18, "question_text": "I ______ that book last month.", "option_a": "read", "option_b": "bought", "option_c": "am reading", "option_d": "have read", "correct_answer": "A", "question_order": 18}, {"id": 19, "question_text": "He ______ his lunch yet.", "option_a": "doesn't eat", "option_b": "didn't eat", "option_c": "isn't eating", "option_d": "hasn't eaten", "correct_answer": "D", "question_order": 19}, {"id": 20, "question_text": "The students usually ______ their assignments on time.", "option_a": "submit", "option_b": "submitted", "option_c": "are submitting", "option_d": "have submitted", "correct_answer": "A", "question_order": 20}];
 const PENDING_KEY="stepup_pending_attempts_v3";
 const HISTORY_KEY="stepup_attempt_history_v3";
@@ -531,6 +579,14 @@ function setCardActionStates(attemptsList){
     const isAvailable=!available || available<=today;
     btn.disabled=!isAvailable;
     btn.title=isAvailable ? 'ابدأ الاختبار' : 'يتاح في '+raw;
+  });
+
+  document.querySelectorAll('[data-availability-status]').forEach(status=>{
+    const raw=status.getAttribute('data-available-date')||'';
+    const available=raw ? new Date(raw+'T00:00:00') : null;
+    const isAvailable=!available || available<=today;
+    status.classList.toggle('unavailable-status', !isAvailable);
+    status.innerHTML='<span class="dot"></span>'+(isAvailable ? 'متاح' : 'غير متاح');
   });
 
   const performed=new Set((attemptsList||[]).map(a=>String(a.test_id)));
