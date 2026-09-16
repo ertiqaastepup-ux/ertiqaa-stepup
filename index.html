@@ -876,14 +876,80 @@ function requestCertificateName(testTitle,percentage){
   issueCertificate(name,testTitle,percentage);
 }
 
-document.addEventListener("click",e=>{
+
+async function loadFullAnalysisForTest(testId){
+  const id=Number(testId);
+  const attempts=await sb(
+    "attempts?select=id,test_id,score,total_questions,percentage,session_id,completed_at,created_at"+
+    "&test_id=eq."+id+
+    "&order=created_at.asc"
+  );
+
+  const fullAttempts=(attempts||[]).map(a=>({...a,responses:[]}));
+
+  if(fullAttempts.length){
+    const attemptIds=fullAttempts.map(a=>a.id);
+    const idList="("+attemptIds.join(",")+")";
+
+    const [questions,responses]=await Promise.all([
+      sb("questions?select=id,test_id,topic&test_id=eq."+id),
+      sb("responses?select=id,attempt_id,question_id,selected_answer,is_correct&attempt_id=in."+encodeURIComponent(idList))
+    ]);
+
+    const qMap={};
+    (questions||[]).forEach(q=>qMap[String(q.id)]=q);
+
+    const byAttempt={};
+    (responses||[]).forEach(r=>{
+      const key=String(r.attempt_id);
+      if(!byAttempt[key]) byAttempt[key]=[];
+      const q=qMap[String(r.question_id)]||{};
+      byAttempt[key].push({
+        question_id:r.question_id,
+        selected_answer:r.selected_answer,
+        is_correct:r.is_correct,
+        topic:q.topic || topicForQuestion(r.question_id)
+      });
+    });
+
+    fullAttempts.forEach(a=>{
+      a.responses=byAttempt[String(a.id)]||[];
+    });
+  }
+
+  const group={
+    id:String(id),
+    title:displayTestName({id}),
+    attempts:fullAttempts
+  };
+
+  renderTestAnalysis(group);
+  return group;
+}
+
+document.addEventListener("click",async e=>{
   const btn=e.target.closest("[data-analysis-toggle]");
   if(!btn || btn.disabled) return;
+
   const id=btn.getAttribute("data-analysis-toggle");
   const panel=document.getElementById("testAnalysis"+id);
   if(!panel) return;
-  panel.classList.toggle("open");
-  btn.textContent=panel.classList.contains("open") ? "إخفاء التحليل" : "تحليل الأداء";
+
+  const opening=!panel.classList.contains("open");
+  panel.classList.toggle("open",opening);
+  btn.textContent=opening ? "إخفاء التحليل" : "تحليل الأداء";
+
+  if(opening){
+    const oldText=btn.textContent;
+    try{
+      btn.textContent="جاري تحديث التحليل...";
+      await loadFullAnalysisForTest(id);
+      btn.textContent="إخفاء التحليل";
+    }catch(err){
+      console.error("Full test analysis load failed",err);
+      btn.textContent=oldText;
+    }
+  }
 });
 
 async function syncPending(){
