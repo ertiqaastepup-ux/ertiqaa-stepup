@@ -567,21 +567,46 @@ function renderTestAnalysis(group){
   if(!metrics || !panel) return;
 
   const vals=group.attempts.map(a=>Number(a.percentage)||0);
-  const avg=Math.round(vals.reduce((a,b)=>a+b,0)/vals.length);
+  const avg=vals.length ? Math.round(vals.reduce((a,b)=>a+b,0)/vals.length) : 0;
   metrics.textContent="متوسط الاختبار "+avg+"% | "+group.attempts.length+" محاولة";
 
   const topicMap={};
   group.attempts.forEach(a=>{
     (a.responses||[]).forEach(r=>{
-      const topic=r.topic || topicForQuestion(r.question_id);
+      let topic=r.topic || topicForQuestion(r.question_id);
+
+      // توحيد مسميات تحليل Grammar 2
+      if(String(group.id)==="2"){
+        const t=String(topic||"").toLowerCase();
+        if(t.includes("past progressive")) topic="Past Progressive";
+        else if(t.includes("when") || t.includes("while")) topic="when / while";
+        else if(t.includes("auxiliary")) topic="Auxiliary Verbs";
+        else if(t.includes("question") || t.includes("negative") || t.includes("short answer")){
+          topic="Questions, Negatives & Short Answers";
+        }
+      }
+
       if(!topicMap[topic]) topicMap[topic]={total:0,correct:0};
       topicMap[topic].total++;
       if(r.is_correct) topicMap[topic].correct++;
     });
   });
 
-  const rows=Object.entries(topicMap).map(([topic,v])=>{
-    const pct=v.total?Math.round(v.correct/v.total*100):0;
+  let orderedTopics;
+  if(String(group.id)==="2"){
+    orderedTopics=[
+      "Past Progressive",
+      "when / while",
+      "Auxiliary Verbs",
+      "Questions, Negatives & Short Answers"
+    ];
+  }else{
+    orderedTopics=Object.keys(topicMap);
+  }
+
+  const rows=orderedTopics.map(topic=>{
+    const v=topicMap[topic] || {total:0,correct:0};
+    const pct=v.total ? Math.round(v.correct/v.total*100) : 0;
     return '<div class="topic-row">'+
       '<div>'+esc(topic)+'</div>'+
       '<div class="topic-track"><div class="topic-fill" style="width:'+pct+'%"></div></div>'+
