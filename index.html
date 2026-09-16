@@ -267,7 +267,7 @@ footer{background:var(--navy);color:#dce8e8;text-align:center;padding:19px;font-
   outline:3px solid #c49a3a;
   outline-offset:-18px;
   box-sizing:border-box;
-  padding:42px 58px;
+  padding:42px 58px 92px;
   text-align:center;
   position:relative;
   background:
@@ -284,10 +284,10 @@ footer{background:var(--navy);color:#dce8e8;text-align:center;padding:19px;font-
 .cert-level{font-weight:900;color:#237f7c}
 
 .cert-skills{
-  margin:12px auto 0;
-  max-width:880px;
-  font-size:17px;
-  line-height:1.8;
+  margin:10px auto 0;
+  max-width:900px;
+  font-size:15px;
+  line-height:1.55;
   color:#5f6b78;
   font-weight:600;
 }
@@ -296,7 +296,24 @@ footer{background:var(--navy);color:#dce8e8;text-align:center;padding:19px;font-
   font-weight:800;
 }
 
-.cert-footer{position:absolute;bottom:34px;right:0;left:0;font-size:18px;color:#46566d;line-height:1.7}
+.cert-footer{
+  position:absolute;
+  bottom:24px;
+  right:48px;
+  left:48px;
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  justify-content:space-between;
+  gap:24px;
+  white-space:nowrap;
+  font-size:16px;
+  font-weight:700;
+  color:#46566d;
+  line-height:1.2;
+  border-top:1px solid #d8c9a4;
+  padding-top:12px;
+}
 </style>
 
 </head>
@@ -677,8 +694,13 @@ function setCardActionStates(attemptsList){
   document.querySelectorAll('[data-analysis-toggle]').forEach(btn=>{
     const id=btn.getAttribute('data-analysis-toggle');
     const hasPerformance=performed.has(String(id));
-    btn.disabled=!hasPerformance;
-    btn.title=hasPerformance ? 'عرض تحليل الأداء' : 'يتاح تحليل الأداء بعد تنفيذ الاختبار';
+    if(hasPerformance){
+      btn.disabled=false;
+      btn.title='عرض تحليل الأداء';
+    }else if(btn.disabled!==false){
+      btn.disabled=true;
+      btn.title='يتاح تحليل الأداء بعد تنفيذ الاختبار';
+    }
   });
 }
 
@@ -802,7 +824,7 @@ async function issueCertificate(studentName,testTitle,percentage){
       '<div class="cert-text">قد أتمت اختبار <b>'+esc(testTitle||"Grammar")+'</b> ضمن برنامج <b>ارتقاء | STEP UP</b><br>'+
       'وحققت نسبة <b>'+Number(percentage)+'%</b> بمستوى إنجاز <span class="cert-level">'+level+'</span></div>'+
       '<div class="cert-skills"><b>المهارات التفصيلية:</b> '+esc(testSkills)+'</div>'+
-      '<div class="cert-footer">إدارة تعليم جدة<br>العام الدراسي ١٤٤٨هـ<br>تاريخ الإصدار: '+dateText+'</div>'+
+      '<div class="cert-footer"><span>تاريخ الإصدار: '+dateText+'</span><span>إدارة تعليم جدة</span><span>العام الدراسي ١٤٤٨هـ</span></div>'+
     '</div>';
 
   document.body.appendChild(wrap);
@@ -942,7 +964,33 @@ async function submitBank(){
     setPending(p);
   }
 
-  if(savedOnline){ try{ await refreshStats(); }catch(e){} }
+  // فعّل تحليل الأداء فور انتهاء الاختبار الحالي، حتى قبل اكتمال إعادة جلب الإحصاءات المركزية
+  const currentAnalysisBtn=document.querySelector('[data-analysis-toggle="'+bank.test.id+'"]');
+  if(currentAnalysisBtn){
+    currentAnalysisBtn.disabled=false;
+    currentAnalysisBtn.title='عرض تحليل الأداء';
+  }
+
+  // اعرض تحليل المحاولة الحالية مباشرة، ثم حدّثه لاحقًا من قاعدة البيانات
+  try{
+    const currentAttemptForAnalysis={
+      percentage,
+      responses:qs.map(q=>({
+        question_id:q.id,
+        is_correct:bank.answers[q.id]===q.correct_answer,
+        topic:q.topic || topicForQuestion(q.id)
+      }))
+    };
+    renderTestAnalysis({
+      id:String(bank.test.id),
+      title:displayTestName(bank.test),
+      attempts:[currentAttemptForAnalysis]
+    });
+  }catch(e){}
+
+  // تحديث الإحصاءات المركزية بعد الحفظ، مع بقاء التحليل المحلي ظاهرًا إذا تعذر الاتصال مؤقتًا
+  try{ await refreshStats(); }catch(e){}
+
   const body=document.querySelector("#bankModal .bank-body");
 
   // Keep the same question cards and the student's selected answers.
