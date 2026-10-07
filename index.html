@@ -395,6 +395,51 @@ footer{background:var(--navy);color:#dce8e8;text-align:center;padding:19px;font-
       <div class="test-analysis-panel" id="testAnalysis5"></div>
      </div>
     </article>
+
+    <article class="test future" role="listitem" aria-label="الاختبار الخامس">
+     <h3>Grammar 5</h3>
+     <div class="tenses">Future with Will • Be Going To • Future Progressive • Time Expressions for the Future</div>
+     <div class="date">الأربعاء 07-10-2026</div>
+     <div class="status unavailable-status" data-availability-status="9" data-available-date="2026-10-07"><span class="dot"></span>غير متاح</div>
+     <div class="test-actions">
+      <button class="btn bank-btn" type="button" data-open-test="9" data-available-date="2026-10-07" aria-haspopup="dialog" aria-controls="bankModal">ابدأ الاختبار</button>
+      <button class="analysis-btn" type="button" data-analysis-toggle="9" disabled>تحليل الأداء</button>
+     </div>
+     <div class="test-performance" data-test-id="9">
+      <div class="test-performance-summary"><div class="test-performance-metrics" id="testMetrics9">لا توجد محاولات بعد</div></div>
+      <div class="test-analysis-panel" id="testAnalysis9"></div>
+     </div>
+    </article>
+
+    <article class="test future" role="listitem" aria-label="الاختبار السادس">
+     <h3>Grammar 6</h3>
+     <div class="tenses">Present Simple vs Present Progressive • Present Progressive for Future • Information Questions</div>
+     <div class="date">الأربعاء 14-10-2026</div>
+     <div class="status unavailable-status" data-availability-status="7" data-available-date="2026-10-14"><span class="dot"></span>غير متاح</div>
+     <div class="test-actions">
+      <button class="btn bank-btn" type="button" data-open-test="7" data-available-date="2026-10-14" aria-haspopup="dialog" aria-controls="bankModal">ابدأ الاختبار</button>
+      <button class="analysis-btn" type="button" data-analysis-toggle="7" disabled>تحليل الأداء</button>
+     </div>
+     <div class="test-performance" data-test-id="7">
+      <div class="test-performance-summary"><div class="test-performance-metrics" id="testMetrics7">لا توجد محاولات بعد</div></div>
+      <div class="test-analysis-panel" id="testAnalysis7"></div>
+     </div>
+    </article>
+
+    <article class="test future" role="listitem" aria-label="الاختبار السابع">
+     <h3>Grammar 7</h3>
+     <div class="tenses">Adverbs of Degree • Tag Questions • Suggestions</div>
+     <div class="date">الأربعاء 21-10-2026</div>
+     <div class="status unavailable-status" data-availability-status="8" data-available-date="2026-10-21"><span class="dot"></span>غير متاح</div>
+     <div class="test-actions">
+      <button class="btn bank-btn" type="button" data-open-test="8" data-available-date="2026-10-21" aria-haspopup="dialog" aria-controls="bankModal">ابدأ الاختبار</button>
+      <button class="analysis-btn" type="button" data-analysis-toggle="8" disabled>تحليل الأداء</button>
+     </div>
+     <div class="test-performance" data-test-id="8">
+      <div class="test-performance-summary"><div class="test-performance-metrics" id="testMetrics8">لا توجد محاولات بعد</div></div>
+      <div class="test-analysis-panel" id="testAnalysis8"></div>
+     </div>
+    </article>
    </div>
   </section>
 
@@ -550,6 +595,9 @@ function groupByTest(attempts){
     if(id===2) return "Grammar 2";
     if(id===3) return "Grammar 3";
     if(id===5 || id===4) return "Grammar 4";
+    if(id===9) return "Grammar 5";
+    if(id===7) return "Grammar 6";
+    if(id===8) return "Grammar 7";
     return "اختبار "+id;
   };
   attempts.forEach(a=>{
@@ -558,7 +606,10 @@ function groupByTest(attempts){
     map[id].attempts.push(a);
     map[id].title=fixedTitle(id);
   });
-  return Object.values(map).sort((a,b)=>Number(a.id)-Number(b.id));
+  return Object.values(map).sort((a,b)=>{
+    const num=x=>Number((String(x.title).match(/Grammar\s*(\d+)/i)||[])[1]||999);
+    return num(a)-num(b);
+  });
 }
 
 function renderTestAnalysis(group){
@@ -599,6 +650,26 @@ function renderTestAnalysis(group){
       "when / while",
       "Auxiliary Verbs",
       "Questions, Negatives & Short Answers"
+    ];
+  }else if(String(group.id)==="9"){
+    orderedTopics=[
+      "Future with Will",
+      "Be Going To",
+      "Future Progressive",
+      "Time Expressions for the Future"
+    ];
+  }else if(String(group.id)==="7"){
+    orderedTopics=[
+      "Present Simple",
+      "Present Progressive",
+      "Present Progressive for Future",
+      "Information Questions"
+    ];
+  }else if(String(group.id)==="8"){
+    orderedTopics=[
+      "Adverbs of Degree",
+      "Tag Questions",
+      "Suggestions"
     ];
   }else{
     orderedTopics=Object.keys(topicMap);
@@ -787,6 +858,9 @@ function displayTestName(test){
   if(id===2) return "Grammar 2";
   if(id===3) return "Grammar 3";
   if(id===5 || id===4) return "Grammar 4";
+  if(id===9) return "Grammar 5";
+  if(id===7) return "Grammar 6";
+  if(id===8) return "Grammar 7";
   return (test && (test.title || test.title_at)) || "Grammar";
 }
 
@@ -806,6 +880,9 @@ function normalizeCertificateTestTitle(title){
   if(/^Grammar\s*2$/i.test(t) || /Past Progressive|Auxiliary Verbs/i.test(t)) return "Grammar 2";
   if(/^Grammar\s*3$/i.test(t) || /Comparatives|Superlatives|Passive Structures/i.test(t)) return "Grammar 3";
   if(/^Grammar\s*4$/i.test(t) || /Relative Pronouns|Past Perfect|Used to|Would|Passive Voice/i.test(t)) return "Grammar 4";
+  if(/^Grammar\s*5$/i.test(t) || /Future with Will|Be Going To|Future Progressive/i.test(t)) return "Grammar 5";
+  if(/^Grammar\s*6$/i.test(t) || /Present Simple vs Present Progressive|Present Progressive for Future/i.test(t)) return "Grammar 6";
+  if(/^Grammar\s*7$/i.test(t) || /Adverbs of Degree|Tag Questions|Suggestions/i.test(t)) return "Grammar 7";
   return t || "Grammar";
 }
 
@@ -816,6 +893,9 @@ function getCertificateSkills(testTitle){
   if(t==="Grammar 2") return "Past Progressive، when / while، Auxiliary Verbs، Question Formation، Negative Forms، Short Answers";
   if(t==="Grammar 3") return "Comparatives، Superlatives، Irregular Comparison، Passive Structures";
   if(t==="Grammar 4") return "Relative Pronouns، Past Perfect، Past Perfect Progressive، Used to / Would، Passive Voice";
+  if(t==="Grammar 5") return "Future with Will، Be Going To، Future Progressive، Time Expressions for the Future";
+  if(t==="Grammar 6") return "Present Simple vs Present Progressive، Present Progressive for Future، Information Questions";
+  if(t==="Grammar 7") return "Adverbs of Degree، Tag Questions، Suggestions";
   return "وفق المهارات المعتمدة في الاختبار";
 }
 
@@ -968,7 +1048,7 @@ async function openBank(testId){
   const modal=document.getElementById("bankModal");
   const body=modal.querySelector(".bank-body");
   const bankTitle=document.getElementById("bankTitle");
-  const displayNames={1:"Grammar 1",2:"Grammar 2",3:"Grammar 3",4:"Grammar 4",5:"Grammar 4"};
+  const displayNames={1:"Grammar 1",2:"Grammar 2",3:"Grammar 3",4:"Grammar 4",5:"Grammar 4",9:"Grammar 5",7:"Grammar 6",8:"Grammar 7"};
   if(bankTitle) bankTitle.textContent=displayNames[Number(testId)]||"Grammar";
   modal.classList.add("open");
   body.innerHTML='<div class="bank-loading">جاري تحميل الاختبار...</div>';
