@@ -440,6 +440,51 @@ footer{background:var(--navy);color:#dce8e8;text-align:center;padding:19px;font-
       <div class="test-analysis-panel" id="testAnalysis8"></div>
      </div>
     </article>
+
+    <article class="test future" role="listitem" aria-label="الاختبار الثامن">
+     <h3>Grammar 8</h3>
+     <div class="tenses">Future Forms • Future Progressive • Future Plans</div>
+     <div class="date">الأربعاء 28-10-2026</div>
+     <div class="status unavailable-status" data-availability-status="10" data-available-date="2026-10-28"><span class="dot"></span>غير متاح</div>
+     <div class="test-actions">
+      <button class="btn bank-btn" type="button" data-open-test="10" data-available-date="2026-10-28" aria-haspopup="dialog" aria-controls="bankModal">ابدأ الاختبار</button>
+      <button class="analysis-btn" type="button" data-analysis-toggle="10" disabled>تحليل الأداء</button>
+     </div>
+     <div class="test-performance" data-test-id="10">
+      <div class="test-performance-summary"><div class="test-performance-metrics" id="testMetrics10">لا توجد محاولات بعد</div></div>
+      <div class="test-analysis-panel" id="testAnalysis10"></div>
+     </div>
+    </article>
+
+    <article class="test future" role="listitem" aria-label="الاختبار التاسع">
+     <h3>Grammar 9</h3>
+     <div class="tenses">Present Simple vs Present Progressive • Present Progressive for Future • Information Questions • Tag Questions • Suggestions</div>
+     <div class="date">الأربعاء 04-11-2026</div>
+     <div class="status unavailable-status" data-availability-status="11" data-available-date="2026-11-04"><span class="dot"></span>غير متاح</div>
+     <div class="test-actions">
+      <button class="btn bank-btn" type="button" data-open-test="11" data-available-date="2026-11-04" aria-haspopup="dialog" aria-controls="bankModal">ابدأ الاختبار</button>
+      <button class="analysis-btn" type="button" data-analysis-toggle="11" disabled>تحليل الأداء</button>
+     </div>
+     <div class="test-performance" data-test-id="11">
+      <div class="test-performance-summary"><div class="test-performance-metrics" id="testMetrics11">لا توجد محاولات بعد</div></div>
+      <div class="test-analysis-panel" id="testAnalysis11"></div>
+     </div>
+    </article>
+
+    <article class="test future" role="listitem" aria-label="الاختبار العاشر">
+     <h3>Grammar 10</h3>
+     <div class="tenses">Adverbs of Degree • Sentence Adverbs • Position of Adjectives • Direct &amp; Indirect Objects</div>
+     <div class="date">الأربعاء 11-11-2026</div>
+     <div class="status unavailable-status" data-availability-status="12" data-available-date="2026-11-11"><span class="dot"></span>غير متاح</div>
+     <div class="test-actions">
+      <button class="btn bank-btn" type="button" data-open-test="12" data-available-date="2026-11-11" aria-haspopup="dialog" aria-controls="bankModal">ابدأ الاختبار</button>
+      <button class="analysis-btn" type="button" data-analysis-toggle="12" disabled>تحليل الأداء</button>
+     </div>
+     <div class="test-performance" data-test-id="12">
+      <div class="test-performance-summary"><div class="test-performance-metrics" id="testMetrics12">لا توجد محاولات بعد</div></div>
+      <div class="test-analysis-panel" id="testAnalysis12"></div>
+     </div>
+    </article>
    </div>
   </section>
 
@@ -598,6 +643,9 @@ function groupByTest(attempts){
     if(id===9) return "Grammar 5";
     if(id===7) return "Grammar 6";
     if(id===8) return "Grammar 7";
+    if(id===10) return "Grammar 8";
+    if(id===11) return "Grammar 9";
+    if(id===12) return "Grammar 10";
     return "اختبار "+id;
   };
   attempts.forEach(a=>{
@@ -670,6 +718,29 @@ function renderTestAnalysis(group){
       "Adverbs of Degree",
       "Tag Questions",
       "Suggestions"
+    ];
+  }else if(String(group.id)==="10"){
+    orderedTopics=[
+      "Future with Will",
+      "Be Going To",
+      "Future Progressive",
+      "Future Plans"
+    ];
+  }else if(String(group.id)==="11"){
+    orderedTopics=[
+      "Present Simple",
+      "Present Progressive",
+      "Present Progressive for Future",
+      "Information Questions",
+      "Tag Questions",
+      "Suggestions"
+    ];
+  }else if(String(group.id)==="12"){
+    orderedTopics=[
+      "Adverbs of Degree",
+      "Sentence Adverbs",
+      "Position of Adjectives",
+      "Direct & Indirect Objects"
     ];
   }else{
     orderedTopics=Object.keys(topicMap);
@@ -861,6 +932,9 @@ function displayTestName(test){
   if(id===9) return "Grammar 5";
   if(id===7) return "Grammar 6";
   if(id===8) return "Grammar 7";
+  if(id===10) return "Grammar 8";
+  if(id===11) return "Grammar 9";
+  if(id===12) return "Grammar 10";
   return (test && (test.title || test.title_at)) || "Grammar";
 }
 
@@ -882,7 +956,10 @@ function normalizeCertificateTestTitle(title){
   if(/^Grammar\s*4$/i.test(t) || /Relative Pronouns|Past Perfect|Used to|Would|Passive Voice/i.test(t)) return "Grammar 4";
   if(/^Grammar\s*5$/i.test(t) || /Future with Will|Be Going To|Future Progressive/i.test(t)) return "Grammar 5";
   if(/^Grammar\s*6$/i.test(t) || /Present Simple vs Present Progressive|Present Progressive for Future/i.test(t)) return "Grammar 6";
-  if(/^Grammar\s*7$/i.test(t) || /Adverbs of Degree|Tag Questions|Suggestions/i.test(t)) return "Grammar 7";
+  if(/^Grammar\s*7$/i.test(t)) return "Grammar 7";
+  if(/^Grammar\s*8$/i.test(t)) return "Grammar 8";
+  if(/^Grammar\s*9$/i.test(t)) return "Grammar 9";
+  if(/^Grammar\s*10$/i.test(t)) return "Grammar 10";
   return t || "Grammar";
 }
 
@@ -896,6 +973,9 @@ function getCertificateSkills(testTitle){
   if(t==="Grammar 5") return "Future with Will، Be Going To، Future Progressive، Time Expressions for the Future";
   if(t==="Grammar 6") return "Present Simple vs Present Progressive، Present Progressive for Future، Information Questions";
   if(t==="Grammar 7") return "Adverbs of Degree، Tag Questions، Suggestions";
+  if(t==="Grammar 8") return "Future Forms، Future Progressive، Future Plans";
+  if(t==="Grammar 9") return "Present Simple vs Present Progressive، Present Progressive for Future، Information Questions، Tag Questions، Suggestions";
+  if(t==="Grammar 10") return "Adverbs of Degree، Sentence Adverbs، Position of Adjectives، Direct & Indirect Objects";
   return "وفق المهارات المعتمدة في الاختبار";
 }
 
@@ -1048,7 +1128,7 @@ async function openBank(testId){
   const modal=document.getElementById("bankModal");
   const body=modal.querySelector(".bank-body");
   const bankTitle=document.getElementById("bankTitle");
-  const displayNames={1:"Grammar 1",2:"Grammar 2",3:"Grammar 3",4:"Grammar 4",5:"Grammar 4",9:"Grammar 5",7:"Grammar 6",8:"Grammar 7"};
+  const displayNames={1:"Grammar 1",2:"Grammar 2",3:"Grammar 3",4:"Grammar 4",5:"Grammar 4",9:"Grammar 5",7:"Grammar 6",8:"Grammar 7",10:"Grammar 8",11:"Grammar 9",12:"Grammar 10"};
   if(bankTitle) bankTitle.textContent=displayNames[Number(testId)]||"Grammar";
   modal.classList.add("open");
   body.innerHTML='<div class="bank-loading">جاري تحميل الاختبار...</div>';
