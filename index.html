@@ -1027,16 +1027,76 @@ function renderStatsFromAttempts(attemptsList){
   renderTrend(groups);
 }
 
+function mergeAttemptSources(...sources){
+  const merged=[], seen=new Set();
+  sources.flat().forEach(a=>{
+    if(!a) return;
+    const key=a.id
+      ? "db-"+a.id
+      : (a.session_id || a.saved_at || JSON.stringify([a.test_id,a.score,a.percentage,a.created_at]));
+    if(seen.has(key)) return;
+    seen.add(key);
+    merged.push(a);
+  });
+  return merged;
+}
+
+function renderCardsDirectly(attemptsList){
+  document.querySelectorAll(".test").forEach(card=>{
+    const openBtn=card.querySelector("[data-open-test]");
+    const analysisBtn=card.querySelector("[data-analysis-toggle]");
+    const metrics=card.querySelector(".test-performance-metrics");
+    if(!openBtn || !metrics) return;
+
+    const testId=String(openBtn.getAttribute("data-open-test")||"");
+    const title=(card.querySelector("h3")?.textContent||"").trim();
+
+    // Primary match: real test_id. Fallback: stored title.
+    const matches=(attemptsList||[]).filter(a=>{
+      const sameId=String(a.test_id||"")===testId;
+      const sameTitle=String(a.test_title||"").trim().toLowerCase()===title.toLowerCase();
+      return sameId || sameTitle;
+    });
+
+    if(matches.length){
+      const vals=matches.map(a=>Number(a.percentage)||0);
+      const avg=Math.round(vals.reduce((x,y)=>x+y,0)/vals.length);
+      metrics.textContent="متوسط الاختبار "+avg+"% | "+matches.length+" محاولة";
+      if(analysisBtn){
+        analysisBtn.disabled=false;
+        analysisBtn.title="عرض تحليل الأداء";
+      }
+
+      // Render the detailed panel from the same exact matched attempts.
+      renderTestAnalysis({
+        id:testId,
+        title:title,
+        attempts:matches
+      });
+    }
+  });
+}
+
 async function refreshStats(){
   const status=document.getElementById("statsStatus");
+  let central=[];
   try{
-    const central=await getCentralAttempts();
-    renderStatsFromAttempts(central);
-    if(status) status.textContent="متصل بقاعدة البيانات";
+    central=await getCentralAttempts();
   }catch(e){
-    renderStatsFromAttempts(mergedAttempts());
-    if(status) status.textContent="عرض مؤقت من هذا الجهاز";
-    console.error("Stats load failed",e);
+    console.error("Central stats load failed",e);
+  }
+
+  // Never discard local/pending records. Merge them with central records.
+  const local=mergedAttempts();
+  const all=mergeAttemptSources(central,local);
+
+  renderStatsFromAttempts(all);
+  renderCardsDirectly(all);
+
+  if(status){
+    status.textContent=central.length
+      ? "متصل بقاعدة البيانات"
+      : "عرض من السجل المحفوظ على هذا الجهاز";
   }
 }
 
@@ -1237,7 +1297,24 @@ document.addEventListener("click",async e=>{
     const oldText=btn.textContent;
     try{
       btn.textContent="جاري تحديث التحليل...";
-      await loadFullAnalysisForTest(id);
+
+      // First render from every locally known attempt for this exact card.
+      let central=[];
+      try{ central=await getCentralAttempts(); }catch(e){}
+      const all=mergeAttemptSources(central,mergedAttempts());
+      const title=(card.querySelector("h3")?.textContent||"").trim();
+      const matches=all.filter(a=>
+        String(a.test_id||"")===String(id) ||
+        String(a.test_title||"").trim().toLowerCase()===title.toLowerCase()
+      );
+
+      if(matches.length){
+        renderTestAnalysis({id:String(id),title,attempts:matches});
+      }
+
+      // Then enrich from the database if available.
+      try{ await loadFullAnalysisForTest(id); }catch(e){}
+
       btn.textContent="إخفاء التحليل";
     }catch(err){
       console.error("Full test analysis load failed",err);
@@ -1335,19 +1412,29 @@ async function submitBank(){
   }));
 
   let savedOnline=true;
+  let savedAttemptId=null;
   try{
     const a=(await sb("attempts",{method:"POST",body:JSON.stringify(attempt)}))[0];
+    savedAttemptId=a && a.id ? a.id : null;
     await sb("responses",{
       method:"POST",
       body:JSON.stringify(responses.map(r=>({...r,attempt_id:a.id})))
     });
   }catch(e){
     savedOnline=false;
-    saveLocalHistory(attempt,responses,qs);
     const p=getPending();
     p.push({attempt:{...attempt,test_title:displayTestName(bank.test)||("اختبار "+attempt.test_id)},responses,saved_at:new Date().toISOString()});
     setPending(p);
   }
+
+  // Keep a local mirror on every device that completes the test.
+  // This guarantees the card can show its attempt immediately even if the
+  // database query or responses endpoint is temporarily unavailable.
+  saveLocalHistory(
+    {...attempt,id:savedAttemptId||undefined},
+    responses,
+    qs
+  );
 
   // فعّل تحليل الأداء فور انتهاء الاختبار الحالي، حتى قبل اكتمال إعادة جلب الإحصاءات المركزية
   let currentAnalysisBtn=document.querySelector('[data-analysis-toggle="'+bank.test.id+'"]');
