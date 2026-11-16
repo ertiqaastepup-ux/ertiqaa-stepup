@@ -683,7 +683,10 @@ function groupByTest(attempts){
   attempts.forEach(a=>{
     const id=String(a.test_id||"unknown");
     const suppliedTitle=String(a.test_title||"").trim();
-    const title=/^Grammar\s*\d+$/i.test(suppliedTitle) ? suppliedTitle : fixedTitle(id);
+    const dateTitle=grammarNameByDate(a.test_date||a.available_date);
+    const title=/^Grammar\s*\d+$/i.test(suppliedTitle)
+      ? suppliedTitle
+      : (dateTitle || fixedTitle(id));
     if(!map[id]) map[id]={id,title,attempts:[]};
     map[id].attempts.push(a);
     map[id].title=title;
@@ -762,14 +765,15 @@ function renderTestAnalysis(group){
       "Tag Questions",
       "Suggestions"
     ];
-  }else if(String(group.id)==="10"){
+  }else if(String(group.title)==="Grammar 8"){
     orderedTopics=[
       "Future with Will",
       "Be Going To",
       "Future Progressive",
-      "Future Plans"
+      "Future Plans",
+      "Time Expressions for the Future"
     ];
-  }else if(String(group.id)==="11"){
+  }else if(String(group.title)==="Grammar 9"){
     orderedTopics=[
       "Present Simple",
       "Present Progressive",
@@ -778,7 +782,7 @@ function renderTestAnalysis(group){
       "Tag Questions",
       "Suggestions"
     ];
-  }else if(String(group.id)==="12"){
+  }else if(String(group.title)==="Grammar 10"){
     orderedTopics=[
       "Adverbs of Degree",
       "Sentence Adverbs",
@@ -826,7 +830,7 @@ function renderTrend(groups){
 
 function syncCardBindingsFromTests(tests){
   (tests||[]).forEach(t=>{
-    const name=displayTestName(t);
+    const name=grammarNameByDate(t.available_date) || displayTestName(t);
     if(!/^Grammar\s*\d+$/i.test(String(name||""))) return;
     const card=findCardByTitle(name);
     if(!card) return;
@@ -871,9 +875,10 @@ async function getCentralAttempts(){
   // نجهز المحاولات فورًا، حتى لو لم نتمكن من قراءة responses/questions
   const central=(attempts||[]).map(a=>{
     const t=testMap[String(a.test_id)]||{};
+    const canonicalTitle=displayTestName(t) || grammarNameByDate(t.available_date) || ("اختبار "+a.test_id);
     return {
       ...a,
-      test_title:displayTestName(t) || ("اختبار "+a.test_id),
+      test_title:canonicalTitle,
       test_date:t.available_date || "",
       responses:[]
     };
@@ -1017,7 +1022,28 @@ async function refreshStats(){
 
 
 
+function grammarNameByDate(dateValue){
+  const d=String(dateValue||"").slice(0,10);
+  const map={
+    "2026-09-09":"Grammar 1",
+    "2026-09-16":"Grammar 2",
+    "2026-09-23":"Grammar 3",
+    "2026-09-30":"Grammar 4",
+    "2026-10-07":"Grammar 5",
+    "2026-10-14":"Grammar 6",
+    "2026-10-21":"Grammar 7",
+    "2026-10-28":"Grammar 8",
+    "2026-11-04":"Grammar 9",
+    "2026-11-11":"Grammar 10",
+    "2026-11-18":"Grammar 11",
+    "2026-11-25":"Grammar 12"
+  };
+  return map[d]||"";
+}
+
 function displayTestName(test){
+  const byDate=grammarNameByDate(test && test.available_date);
+  if(byDate) return byDate;
   const raw=String((test && (test.title || test.title_at)) || "").trim();
   if(/^Grammar\s*\d+$/i.test(raw)) return raw.replace(/\s+/g," ");
   const id = Number(test && test.id);
@@ -1181,7 +1207,7 @@ async function loadFullAnalysisForTest(testId){
 
   let liveTitle="";
   try{
-    const liveTests=await sb("tests?select=id,title,title_at&id=eq."+id+"&limit=1");
+    const liveTests=await sb("tests?select=id,title,title_at,available_date&id=eq."+id+"&limit=1");
     if(liveTests && liveTests.length) liveTitle=displayTestName(liveTests[0]);
   }catch(e){}
   const group={
