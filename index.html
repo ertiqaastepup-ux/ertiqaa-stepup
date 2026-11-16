@@ -1335,7 +1335,7 @@ async function syncPending(){
   setPending(left);
 }
 
-async function openBank(testId){
+async function openBank(testId,requestedTitle){
   const modal=document.getElementById("bankModal");
   const body=modal.querySelector(".bank-body");
   const bankTitle=document.getElementById("bankTitle");
@@ -1349,27 +1349,45 @@ async function openBank(testId){
       ? "tests?id=eq."+encodeURIComponent(testId)+"&is_active=eq.true&limit=1"
       : "tests?is_active=eq.true&order=available_date.desc&limit=1";
     const tests=await sb(testQuery);
+
     if(!tests || !tests.length) throw new Error("NO_TEST");
+
     if(tests[0].available_date){
       const available=new Date(tests[0].available_date+"T00:00:00");
       const today=new Date(); today.setHours(0,0,0,0);
       if(available>today) throw new Error("NOT_AVAILABLE_YET");
     }
+
     const questions=await sb("questions?test_id=eq."+tests[0].id+"&order=question_order.asc");
     if(!questions || !questions.length) throw new Error("NO_QUESTIONS");
-    bank.test=tests[0]; bank.questions=questions; bank.offline=false;
+
+    bank.test=tests[0];
+    bank.questions=questions;
+    bank.offline=false;
+
+    if(bankTitle) bankTitle.textContent=requestedTitle || displayTestName(bank.test);
+    renderBank(body);
+
   }catch(e){
-    bank.test=FALLBACK_TEST; bank.questions=FALLBACK_QUESTIONS; bank.offline=true;
-  }
-  if(bankTitle) bankTitle.textContent=displayTestName(bank.test);
-  try{
-    renderBank(body);
-  }catch(renderError){
-    bank.test=FALLBACK_TEST;
-    bank.questions=FALLBACK_QUESTIONS;
-    bank.offline=true;
-    if(bankTitle) bankTitle.textContent="Grammar 1";
-    renderBank(body);
+    // مهم: لا نستبدل الاختبار المطلوب بـ Grammar 1 إطلاقًا.
+    bank.test=null;
+    bank.questions=[];
+    bank.answers={};
+    bank.offline=false;
+
+    if(bankTitle) bankTitle.textContent=requestedTitle || "الاختبار";
+
+    let msg="تعذر تحميل الاختبار من قاعدة البيانات.";
+    if(e && e.message==="NO_TEST") msg="الاختبار المطلوب غير موجود أو رقم الربط غير صحيح.";
+    else if(e && e.message==="NO_QUESTIONS") msg="الاختبار موجود لكن لا توجد أسئلة مرتبطة به.";
+    else if(e && e.message==="NOT_AVAILABLE_YET") msg="هذا الاختبار غير متاح بعد.";
+    else msg="تعذر الاتصال بقاعدة البيانات. لم يتم فتح اختبار بديل حتى لا تُحفظ النتيجة تحت اختبار خاطئ.";
+
+    body.innerHTML=
+      '<div style="padding:18px;border-radius:16px;background:#fff5f5;border:1px solid #f2c7c7;color:#8a1c1c;font-weight:800;line-height:1.8">'+
+      esc(msg)+
+      '</div>';
+    console.error("Test load failed",e);
   }
 }
 
@@ -1390,6 +1408,9 @@ function renderBank(body){
 }
 
 async function submitBank(){
+  if(!bank.test || !bank.questions || !bank.questions.length){
+    return alert("لا يمكن حفظ نتيجة لأن الاختبار لم يُحمّل من قاعدة البيانات.");
+  }
   const qs=bank.questions;
   if(qs.some(q=>!bank.answers[q.id])) return alert("يرجى الإجابة عن جميع الأسئلة");
 
@@ -1555,7 +1576,11 @@ async function submitBank(){
 document.addEventListener("click",e=>{
   const btn=e.target.closest("[data-open-test]");
   if(!btn || btn.disabled) return;
-  openBank(btn.getAttribute("data-open-test"));
+  const card=btn.closest(".test");
+  const requestedTitle=card && card.querySelector("h3")
+    ? card.querySelector("h3").textContent.trim()
+    : "";
+  openBank(btn.getAttribute("data-open-test"),requestedTitle);
 });
 document.getElementById("closeBank").onclick=()=>document.getElementById("bankModal").classList.remove("open");
 document.getElementById("bankModal").addEventListener("click",e=>{if(e.target.id==="bankModal") e.currentTarget.classList.remove("open")});
