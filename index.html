@@ -683,10 +683,9 @@ function groupByTest(attempts){
   attempts.forEach(a=>{
     const id=String(a.test_id||"unknown");
     const suppliedTitle=String(a.test_title||"").trim();
-    const dateTitle=grammarNameByDate(a.test_date||a.available_date);
     const title=/^Grammar\s*\d+$/i.test(suppliedTitle)
       ? suppliedTitle
-      : (dateTitle || fixedTitle(id));
+      : fixedTitle(id);
     if(!map[id]) map[id]={id,title,attempts:[]};
     map[id].attempts.push(a);
     map[id].title=title;
@@ -828,10 +827,29 @@ function renderTrend(groups){
   }).join("");
 }
 
+function buildCanonicalTestMap(tests){
+  const sorted=[...(tests||[])].sort((a,b)=>{
+    const da=String(a.available_date||"9999-12-31");
+    const db=String(b.available_date||"9999-12-31");
+    if(da!==db) return da.localeCompare(db);
+    return Number(a.id||0)-Number(b.id||0);
+  });
+
+  const byId={};
+  sorted.forEach((t,index)=>{
+    byId[String(t.id)]={
+      ...t,
+      canonical_name:"Grammar "+(index+1)
+    };
+  });
+  return byId;
+}
+
 function syncCardBindingsFromTests(tests){
-  (tests||[]).forEach(t=>{
-    const name=grammarNameByDate(t.available_date) || displayTestName(t);
-    if(!/^Grammar\s*\d+$/i.test(String(name||""))) return;
+  const canonicalMap=buildCanonicalTestMap(tests);
+
+  Object.values(canonicalMap).forEach(t=>{
+    const name=t.canonical_name;
     const card=findCardByTitle(name);
     if(!card) return;
 
@@ -854,8 +872,13 @@ function syncCardBindingsFromTests(tests){
       status.setAttribute("data-availability-status",realId);
       if(t.available_date) status.setAttribute("data-available-date",t.available_date);
     }
-    if(perf) perf.setAttribute("data-test-id",realId);
+    if(perf){
+      perf.setAttribute("data-test-id",realId);
+      perf.setAttribute("data-test-title",name);
+    }
   });
+
+  return canonicalMap;
 }
 
 async function getCentralAttempts(){
@@ -867,18 +890,15 @@ async function getCentralAttempts(){
     tests=await sb("tests?select=id,title,title_at,available_date,content&order=available_date.asc");
   }catch(e){ tests=[]; }
 
-  syncCardBindingsFromTests(tests);
+  const testMap=syncCardBindingsFromTests(tests);
 
-  const testMap={};
-  (tests||[]).forEach(t=>testMap[String(t.id)]=t);
-
-  // نجهز المحاولات فورًا، حتى لو لم نتمكن من قراءة responses/questions
+  // نجهز المحاولات بأسماء الاختبارات وفق ترتيبها الفعلي في قاعدة البيانات.
+  // لا نعتمد هنا على أرقام IDs الثابتة.
   const central=(attempts||[]).map(a=>{
     const t=testMap[String(a.test_id)]||{};
-    const canonicalTitle=displayTestName(t) || grammarNameByDate(t.available_date) || ("اختبار "+a.test_id);
     return {
       ...a,
-      test_title:canonicalTitle,
+      test_title:t.canonical_name || displayTestName(t) || ("اختبار "+a.test_id),
       test_date:t.available_date || "",
       responses:[]
     };
@@ -1022,28 +1042,7 @@ async function refreshStats(){
 
 
 
-function grammarNameByDate(dateValue){
-  const d=String(dateValue||"").slice(0,10);
-  const map={
-    "2026-09-09":"Grammar 1",
-    "2026-09-16":"Grammar 2",
-    "2026-09-23":"Grammar 3",
-    "2026-09-30":"Grammar 4",
-    "2026-10-07":"Grammar 5",
-    "2026-10-14":"Grammar 6",
-    "2026-10-21":"Grammar 7",
-    "2026-10-28":"Grammar 8",
-    "2026-11-04":"Grammar 9",
-    "2026-11-11":"Grammar 10",
-    "2026-11-18":"Grammar 11",
-    "2026-11-25":"Grammar 12"
-  };
-  return map[d]||"";
-}
-
 function displayTestName(test){
-  const byDate=grammarNameByDate(test && test.available_date);
-  if(byDate) return byDate;
   const raw=String((test && (test.title || test.title_at)) || "").trim();
   if(/^Grammar\s*\d+$/i.test(raw)) return raw.replace(/\s+/g," ");
   const id = Number(test && test.id);
@@ -1207,8 +1206,9 @@ async function loadFullAnalysisForTest(testId){
 
   let liveTitle="";
   try{
-    const liveTests=await sb("tests?select=id,title,title_at,available_date&id=eq."+id+"&limit=1");
-    if(liveTests && liveTests.length) liveTitle=displayTestName(liveTests[0]);
+    const allTests=await sb("tests?select=id,title,title_at,available_date&order=available_date.asc");
+    const canonicalMap=buildCanonicalTestMap(allTests);
+    liveTitle=(canonicalMap[String(id)]&&canonicalMap[String(id)].canonical_name)||"";
   }catch(e){}
   const group={
     id:String(id),
