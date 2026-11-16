@@ -485,6 +485,36 @@ footer{background:var(--navy);color:#dce8e8;text-align:center;padding:19px;font-
       <div class="test-analysis-panel" id="testAnalysis12"></div>
      </div>
     </article>
+
+    <article class="test future" role="listitem" aria-label="الاختبار الحادي عشر">
+     <h3>Grammar 11</h3>
+     <div class="tenses">Cumulative Review • Grammar 1–10</div>
+     <div class="date">الأربعاء 18-11-2026</div>
+     <div class="status unavailable-status" data-availability-status="13" data-available-date="2026-11-18"><span class="dot"></span>غير متاح</div>
+     <div class="test-actions">
+      <button class="btn bank-btn" type="button" data-open-test="13" data-available-date="2026-11-18" aria-haspopup="dialog" aria-controls="bankModal">ابدأ الاختبار</button>
+      <button class="analysis-btn" type="button" data-analysis-toggle="13" disabled>تحليل الأداء</button>
+     </div>
+     <div class="test-performance" data-test-id="13">
+      <div class="test-performance-summary"><div class="test-performance-metrics" id="testMetrics13">لا توجد محاولات بعد</div></div>
+      <div class="test-analysis-panel" id="testAnalysis13"></div>
+     </div>
+    </article>
+
+    <article class="test future" role="listitem" aria-label="الاختبار الثاني عشر">
+     <h3>Grammar 12</h3>
+     <div class="tenses">Cumulative Review • Grammar 1–10</div>
+     <div class="date">الأربعاء 25-11-2026</div>
+     <div class="status unavailable-status" data-availability-status="14" data-available-date="2026-11-25"><span class="dot"></span>غير متاح</div>
+     <div class="test-actions">
+      <button class="btn bank-btn" type="button" data-open-test="14" data-available-date="2026-11-25" aria-haspopup="dialog" aria-controls="bankModal">ابدأ الاختبار</button>
+      <button class="analysis-btn" type="button" data-analysis-toggle="14" disabled>تحليل الأداء</button>
+     </div>
+     <div class="test-performance" data-test-id="14">
+      <div class="test-performance-summary"><div class="test-performance-metrics" id="testMetrics14">لا توجد محاولات بعد</div></div>
+      <div class="test-analysis-panel" id="testAnalysis14"></div>
+     </div>
+    </article>
    </div>
   </section>
 
@@ -646,13 +676,17 @@ function groupByTest(attempts){
     if(id===10) return "Grammar 8";
     if(id===11) return "Grammar 9";
     if(id===12) return "Grammar 10";
+    if(id===13) return "Grammar 11";
+    if(id===14) return "Grammar 12";
     return "اختبار "+id;
   };
   attempts.forEach(a=>{
     const id=String(a.test_id||"unknown");
-    if(!map[id]) map[id]={id,title:fixedTitle(id),attempts:[]};
+    const suppliedTitle=String(a.test_title||"").trim();
+    const title=/^Grammar\s*\d+$/i.test(suppliedTitle) ? suppliedTitle : fixedTitle(id);
+    if(!map[id]) map[id]={id,title,attempts:[]};
     map[id].attempts.push(a);
-    map[id].title=fixedTitle(id);
+    map[id].title=title;
   });
   return Object.values(map).sort((a,b)=>{
     const num=x=>Number((String(x.title).match(/Grammar\s*(\d+)/i)||[])[1]||999);
@@ -660,9 +694,18 @@ function groupByTest(attempts){
   });
 }
 
+function findCardByTitle(title){
+  const wanted=String(title||"").trim().toLowerCase();
+  return [...document.querySelectorAll(".test")].find(card=>{
+    const h=card.querySelector("h3");
+    return h && h.textContent.trim().toLowerCase()===wanted;
+  }) || null;
+}
+
 function renderTestAnalysis(group){
-  const metrics=document.getElementById("testMetrics"+group.id);
-  const panel=document.getElementById("testAnalysis"+group.id);
+  const card=findCardByTitle(group.title);
+  const metrics=card && card.querySelector(".test-performance-metrics");
+  const panel=card && card.querySelector(".test-analysis-panel");
   if(!metrics || !panel) return;
 
   const vals=group.attempts.map(a=>Number(a.percentage)||0);
@@ -781,14 +824,46 @@ function renderTrend(groups){
   }).join("");
 }
 
+function syncCardBindingsFromTests(tests){
+  (tests||[]).forEach(t=>{
+    const name=displayTestName(t);
+    if(!/^Grammar\s*\d+$/i.test(String(name||""))) return;
+    const card=findCardByTitle(name);
+    if(!card) return;
+
+    const realId=String(t.id);
+    const openBtn=card.querySelector("[data-open-test]");
+    const analysisBtn=card.querySelector("[data-analysis-toggle]");
+    const status=card.querySelector("[data-availability-status]");
+    const perf=card.querySelector(".test-performance");
+
+    if(openBtn){
+      openBtn.setAttribute("data-open-test",realId);
+      openBtn.setAttribute("data-test-title",name);
+      if(t.available_date) openBtn.setAttribute("data-available-date",t.available_date);
+    }
+    if(analysisBtn){
+      analysisBtn.setAttribute("data-analysis-toggle",realId);
+      analysisBtn.setAttribute("data-test-title",name);
+    }
+    if(status){
+      status.setAttribute("data-availability-status",realId);
+      if(t.available_date) status.setAttribute("data-available-date",t.available_date);
+    }
+    if(perf) perf.setAttribute("data-test-id",realId);
+  });
+}
+
 async function getCentralAttempts(){
   // الإحصائيات الأساسية تعتمد أولًا على attempts فقط حتى لا تتعطل إذا فشل جلب التفاصيل
   const attempts=await sb("attempts?select=id,test_id,score,total_questions,percentage,session_id,completed_at,created_at&order=created_at.asc");
 
   let tests=[];
   try{
-    tests=await sb("tests?select=id,title,available_date&order=available_date.asc");
+    tests=await sb("tests?select=id,title,title_at,available_date,content&order=available_date.asc");
   }catch(e){ tests=[]; }
+
+  syncCardBindingsFromTests(tests);
 
   const testMap={};
   (tests||[]).forEach(t=>testMap[String(t.id)]=t);
@@ -857,10 +932,15 @@ function setCardActionStates(attemptsList){
     status.innerHTML='<span class="dot"></span>'+(isAvailable ? 'متاح' : 'غير متاح');
   });
 
-  const performed=new Set((attemptsList||[]).map(a=>String(a.test_id)));
+  const performedIds=new Set((attemptsList||[]).map(a=>String(a.test_id)));
+  const performedTitles=new Set(
+    groupByTest(attemptsList||[]).map(g=>String(g.title||"").trim().toLowerCase())
+  );
   document.querySelectorAll('[data-analysis-toggle]').forEach(btn=>{
     const id=btn.getAttribute('data-analysis-toggle');
-    const hasPerformance=performed.has(String(id));
+    const card=btn.closest(".test");
+    const title=card && card.querySelector("h3") ? card.querySelector("h3").textContent.trim().toLowerCase() : "";
+    const hasPerformance=performedIds.has(String(id)) || performedTitles.has(title);
     if(hasPerformance){
       btn.disabled=false;
       btn.title='عرض تحليل الأداء';
@@ -890,15 +970,29 @@ function renderStatsFromAttempts(attemptsList){
     highest.textContent=Math.max(...vals)+"%";
 
     const groups=groupByTest(attemptsList);
-    if(groups.length<2){
+    if(!groups.length){
       improvement.textContent="—";
     }else{
       const firstVals=groups[0].attempts.map(a=>Number(a.percentage)||0);
-      const lastVals=groups[groups.length-1].attempts.map(a=>Number(a.percentage)||0);
-      const firstAvg=Math.round(firstVals.reduce((a,b)=>a+b,0)/firstVals.length);
-      const lastAvg=Math.round(lastVals.reduce((a,b)=>a+b,0)/lastVals.length);
-      const diff=lastAvg-firstAvg;
-      improvement.textContent=(diff>0?"+":"")+diff+"%";
+      const firstAvg=firstVals.reduce((a,b)=>a+b,0)/firstVals.length;
+
+      // متوسط جميع الاختبارات = متوسط متوسطات الاختبارات، حتى يكون لكل اختبار وزن متساوٍ.
+      const testAverages=groups.map(g=>{
+        const v=g.attempts.map(a=>Number(a.percentage)||0);
+        return v.reduce((a,b)=>a+b,0)/v.length;
+      });
+      const allTestsAvg=testAverages.reduce((a,b)=>a+b,0)/testAverages.length;
+
+      if(firstAvg<=0){
+        improvement.textContent="—";
+      }else{
+        const rate=((allTestsAvg-firstAvg)/firstAvg)*100;
+        const rounded=Math.round(rate*10)/10;
+        improvement.textContent=(rounded>0?"+":"")+rounded.toFixed(1)+"%";
+        improvement.title=
+          "متوسط الاختبار الأول: "+(Math.round(firstAvg*10)/10).toFixed(1)+
+          "% | متوسط جميع الاختبارات: "+(Math.round(allTestsAvg*10)/10).toFixed(1)+"%";
+      }
     }
   }
 
@@ -924,6 +1018,8 @@ async function refreshStats(){
 
 
 function displayTestName(test){
+  const raw=String((test && (test.title || test.title_at)) || "").trim();
+  if(/^Grammar\s*\d+$/i.test(raw)) return raw.replace(/\s+/g," ");
   const id = Number(test && test.id);
   if(id===1) return "Grammar 1";
   if(id===2) return "Grammar 2";
@@ -935,6 +1031,8 @@ function displayTestName(test){
   if(id===10) return "Grammar 8";
   if(id===11) return "Grammar 9";
   if(id===12) return "Grammar 10";
+  if(id===13) return "Grammar 11";
+  if(id===14) return "Grammar 12";
   return (test && (test.title || test.title_at)) || "Grammar";
 }
 
@@ -960,6 +1058,8 @@ function normalizeCertificateTestTitle(title){
   if(/^Grammar\s*8$/i.test(t)) return "Grammar 8";
   if(/^Grammar\s*9$/i.test(t)) return "Grammar 9";
   if(/^Grammar\s*10$/i.test(t)) return "Grammar 10";
+  if(/^Grammar\s*11$/i.test(t)) return "Grammar 11";
+  if(/^Grammar\s*12$/i.test(t)) return "Grammar 12";
   return t || "Grammar";
 }
 
@@ -976,6 +1076,8 @@ function getCertificateSkills(testTitle){
   if(t==="Grammar 8") return "Future Forms، Future Progressive، Future Plans";
   if(t==="Grammar 9") return "Present Simple vs Present Progressive، Present Progressive for Future، Information Questions، Tag Questions، Suggestions";
   if(t==="Grammar 10") return "Adverbs of Degree، Sentence Adverbs، Position of Adjectives، Direct & Indirect Objects";
+  if(t==="Grammar 11") return "مراجعة تراكمية للمهارات المعتمدة من Grammar 1 إلى Grammar 10";
+  if(t==="Grammar 12") return "مراجعة تراكمية للمهارات المعتمدة من Grammar 1 إلى Grammar 10";
   return "وفق المهارات المعتمدة في الاختبار";
 }
 
@@ -1077,9 +1179,14 @@ async function loadFullAnalysisForTest(testId){
     });
   }
 
+  let liveTitle="";
+  try{
+    const liveTests=await sb("tests?select=id,title,title_at&id=eq."+id+"&limit=1");
+    if(liveTests && liveTests.length) liveTitle=displayTestName(liveTests[0]);
+  }catch(e){}
   const group={
     id:String(id),
-    title:displayTestName({id}),
+    title:liveTitle || displayTestName({id}),
     attempts:fullAttempts
   };
 
@@ -1092,7 +1199,8 @@ document.addEventListener("click",async e=>{
   if(!btn || btn.disabled) return;
 
   const id=btn.getAttribute("data-analysis-toggle");
-  const panel=document.getElementById("testAnalysis"+id);
+  const card=btn.closest(".test");
+  const panel=card && card.querySelector(".test-analysis-panel");
   if(!panel) return;
 
   const opening=!panel.classList.contains("open");
@@ -1128,7 +1236,7 @@ async function openBank(testId){
   const modal=document.getElementById("bankModal");
   const body=modal.querySelector(".bank-body");
   const bankTitle=document.getElementById("bankTitle");
-  const displayNames={1:"Grammar 1",2:"Grammar 2",3:"Grammar 3",4:"Grammar 4",5:"Grammar 4",9:"Grammar 5",7:"Grammar 6",8:"Grammar 7",10:"Grammar 8",11:"Grammar 9",12:"Grammar 10"};
+  const displayNames={1:"Grammar 1",2:"Grammar 2",3:"Grammar 3",4:"Grammar 4",5:"Grammar 4",9:"Grammar 5",7:"Grammar 6",8:"Grammar 7",10:"Grammar 8",11:"Grammar 9",12:"Grammar 10",13:"Grammar 11",14:"Grammar 12"};
   if(bankTitle) bankTitle.textContent=displayNames[Number(testId)]||"Grammar";
   modal.classList.add("open");
   body.innerHTML='<div class="bank-loading">جاري تحميل الاختبار...</div>';
@@ -1216,7 +1324,11 @@ async function submitBank(){
   }
 
   // فعّل تحليل الأداء فور انتهاء الاختبار الحالي، حتى قبل اكتمال إعادة جلب الإحصاءات المركزية
-  const currentAnalysisBtn=document.querySelector('[data-analysis-toggle="'+bank.test.id+'"]');
+  let currentAnalysisBtn=document.querySelector('[data-analysis-toggle="'+bank.test.id+'"]');
+  if(!currentAnalysisBtn){
+    const currentCard=findCardByTitle(displayTestName(bank.test));
+    currentAnalysisBtn=currentCard && currentCard.querySelector("[data-analysis-toggle]");
+  }
   if(currentAnalysisBtn){
     currentAnalysisBtn.disabled=false;
     currentAnalysisBtn.title='عرض تحليل الأداء';
